@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { randomBytes } from 'crypto';
 import { desc, eq } from 'drizzle-orm';
@@ -44,7 +44,7 @@ export class RadioTicketService {
             .limit(1);
 
         if (!station) {
-            throw new Error('Station not found');
+            throw new NotFoundException('Station not found');
         }
 
         // Validate draw if provided
@@ -58,13 +58,13 @@ export class RadioTicketService {
                  
 
             if (!draw) {
-                throw new Error('Draw not found for this station');
+                throw new NotFoundException('Draw not found for this station');
             }
             if (draw.status !== 'active' && draw.status !== 'pending') {
-                throw new Error('Draw is not accepting entries');
+                throw new BadRequestException('Draw is not accepting entries');
             }
             if (draw.maxEntries && draw.totalEntries >= draw.maxEntries) {
-                throw new Error('Draw has reached maximum number of entries');
+                throw new BadRequestException('Draw has reached maximum number of entries');
             }
         }
 
@@ -120,7 +120,7 @@ export class RadioTicketService {
                 .limit(1);
 
             if (!newPaymentMethod) {
-                throw new Error('Failed to create a payment method for the user');
+                throw new BadRequestException('Failed to create a payment method for the user');
             }
             userPaymentMethod = newPaymentMethod;
         }
@@ -431,7 +431,7 @@ export class RadioTicketService {
             for (let i = 0; i < quantity; i++) {
                 const ticketUuid = generateUuidV4();
                 if (!userId || !stationId) {
-                    throw new Error('Missing userId or stationId for ticket creation');
+                    throw new BadRequestException('Missing userId or stationId for ticket creation');
                 }
                 const ticketData = {
                     ticketUuid,
