@@ -5,7 +5,7 @@ import {
     timestamp,
   } from "drizzle-orm/mysql-core";
   
-  export const paymentMethodConfigs = mysqlTable("Paymentmethodconfig", {
+  export const paymentMethodConfigs = mysqlTable("paymentmethodconfig", {
     id: int("id").primaryKey().autoincrement().notNull(),
   
     logo: varchar("logo", { length: 255 }),

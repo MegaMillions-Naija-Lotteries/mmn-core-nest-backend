@@ -8,7 +8,7 @@ import {
   import { uniqueIndex } from "drizzle-orm/mysql-core";
   
   export const managers = mysqlTable(
-    "Managers",
+    "managers",
     {
       id: int("id").primaryKey().autoincrement().notNull(),
   

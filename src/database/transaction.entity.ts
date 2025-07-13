@@ -6,7 +6,7 @@ import {
     datetime,
   } from "drizzle-orm/mysql-core";
   
-  export const transactions = mysqlTable("Transaction", {
+  export const transactions = mysqlTable("transaction", {
     id: int("id").primaryKey().autoincrement().notNull(),
   
     idUser: int("idUser"),
