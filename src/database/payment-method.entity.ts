@@ -5,7 +5,7 @@ import {
     timestamp,
   } from "drizzle-orm/mysql-core";
   
-  export const paymentMethods = mysqlTable("Paymentmethod", {
+  export const paymentMethods = mysqlTable("paymentmethod", {
     id: int("id").primaryKey().autoincrement().notNull(),
   
     userId: int("userId"),
