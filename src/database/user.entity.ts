@@ -8,18 +8,18 @@ import {
   } from 'drizzle-orm/mysql-core';
   import { sql } from 'drizzle-orm';
   
-  export const users = mysqlTable('User', {
+  export const users = mysqlTable('user', {
     id: int('id').primaryKey().autoincrement().notNull(),
-  
+
     authKey: varchar('authKey', { length: 255 }),
     managerId: int('manager_id'),
+    email: varchar('email', { length: 255 }).unique(),
     name: varchar('name', { length: 255 }),
     lname: varchar('lname', { length: 255 }),
     gender: int('gender'),
     dob: int('dob'),
     passwordHash: varchar('passwordHash', { length: 255 }),
     passwordResetToken: varchar('passwordResetToken', { length: 255 }),
-    email: varchar('email', { length: 255 }).unique(),
     phone: varchar('phone', { length: 255 }),
     pin: varchar('pin', { length: 255 }),
     country: varchar('country', { length: 255 }),

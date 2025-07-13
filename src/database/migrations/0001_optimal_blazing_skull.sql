@@ -37,7 +37,6 @@ CREATE TABLE `Paymentmethodconfig` (
 	`link` varchar(255),
 	`config` varchar(255),
 	`status` int,
-	`acapture_method` varchar(255),
 	`created_at` timestamp,
 	`updated_at` timestamp,
 	`deleted_at` timestamp,

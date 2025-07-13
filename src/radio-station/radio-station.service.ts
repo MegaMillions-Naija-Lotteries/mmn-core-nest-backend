@@ -16,7 +16,7 @@ export class RadioStationService {
     ) {}
     
     // create a radio station
-    async create(createRadioStationDto: CreateRadioStationDto): Promise<SelectRadioStation> {
+    async create(createRadioStationDto: CreateRadioStationDto): Promise<{message: string, data: SelectRadioStation}> {
         //insert into the db
         const result = await this.db
             .insert(radioStations)
@@ -30,7 +30,18 @@ export class RadioStationService {
             .where(eq(radioStations.id, insertId))
             .limit(1);
 
-        return station;
+        return {
+            message: 'Station created successfully',
+            data: {
+                id: station.id,
+                name: station.name,
+                logo: station.logo,
+                link: station.link,
+                isActive: station.isActive,
+                createdAt: station.createdAt,
+                updatedAt: station.updatedAt,
+            },
+        };
     }
 
 

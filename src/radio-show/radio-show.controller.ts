@@ -10,7 +10,7 @@ import { Public } from 'src/auth/decorator/public.decorator';
 import { GetUser } from 'src/auth/decorator';
 
 @UseGuards(JwtGuard, RolesGuard)
-@Controller('radio-shows')
+@Controller('shows')
 export class RadioShowController {
     constructor(private readonly radioShowService: RadioShowService) {}
 

@@ -12,10 +12,20 @@ import { RadioShowSessionModule } from './radio-show-session/radio-show-session.
 import { RadioTicketModule } from './radio-ticket/radio-ticket.module';
 import { PaystackModule } from './paystack/paystack.module';
 import { PaymentController } from './payment/payment.controller';
+import { HttpModule } from '@nestjs/axios';
+// import { RadioDrawModule } from './radio-draw/radio-draw.module';
+import { RadioModule } from './radio/radio.module';
+import { RouterModule } from '@nestjs/core';
+import { RadioDrawModule } from './radio-draw/radio-draw.module';
+import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    HttpModule.register({
+      timeout: 10000,
+      maxRedirects: 5,
+    }),
     PaystackModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         secretKey: configService.get<string>('PAYSTACK_SECRET_KEY') || '',
@@ -30,6 +40,15 @@ import { PaymentController } from './payment/payment.controller';
     RadioShowModule,
     RadioShowSessionModule,
     RadioTicketModule,
+    RadioModule,
+    RouterModule.register([
+      {
+        path: 'radio',
+        module: RadioModule,
+      },
+    ]),
+    RadioDrawModule,
+    TransactionModule,
   ],
   controllers:[PaymentController]
   

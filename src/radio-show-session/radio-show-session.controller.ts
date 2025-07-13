@@ -8,7 +8,7 @@ import { Roles } from 'src/auth/roles/roles.decorator';
 import { CreateRadioShowSessionDto } from './dto/create-radio-show-session.dto';
 
 @UseGuards(JwtGuard, RolesGuard)
-@Controller('radio-show-sessions')
+@Controller('sessions')
 export class RadioShowSessionController {
     constructor ( private radioShowSessionService:RadioShowSessionService) {}
 

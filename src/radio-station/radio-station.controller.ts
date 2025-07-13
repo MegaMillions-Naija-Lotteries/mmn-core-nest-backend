@@ -21,7 +21,7 @@ import { GetUser } from 'src/auth/decorator';
 import { Public } from 'src/auth/decorator/public.decorator';
 
   @UseGuards(JwtGuard, RolesGuard)
-  @Controller('radio-stations')
+  @Controller('stations')
   export class RadioStationController{
     constructor(private readonly radioStationService: RadioStationService) {}
 

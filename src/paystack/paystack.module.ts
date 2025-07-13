@@ -5,7 +5,9 @@ import { HttpModule } from '@nestjs/axios';
 
 @Global()
 @Module({
-    imports:[HttpModule]
+    imports:[HttpModule],
+    exports:[PaystackService],
+    providers:[PaystackService]
 })
 export class PaystackModule {
   static forRoot(config: PaystackConfig): DynamicModule {

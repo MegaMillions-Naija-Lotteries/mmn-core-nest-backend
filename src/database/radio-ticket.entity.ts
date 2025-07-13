@@ -24,8 +24,8 @@ import {
     isActive: table.boolean("is_active").notNull().default(true),
     expiresAt: table.datetime("expires_at"),
     invalidatedAt: table.datetime("invalidated_at"),
-    createdAt: table.timestamp("created_at").notNull().defaultNow(),
-    updatedAt: table.timestamp("updated_at").notNull().defaultNow().onUpdateNow(),
+    createdAt: table.timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: table.timestamp("updatedAt").notNull().defaultNow().onUpdateNow(),
   }), (table) => ({
     ticketUuidIdx: index("idx_ticket_uuid").on(table.ticketUuid),
     userIdIdx: index("idx_user_id").on(table.userId),

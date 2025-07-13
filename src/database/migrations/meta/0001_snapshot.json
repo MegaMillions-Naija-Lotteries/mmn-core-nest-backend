@@ -263,13 +263,6 @@
           "notNull": false,
           "autoincrement": false
         },
-        "acapture_method": {
-          "name": "acapture_method",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",

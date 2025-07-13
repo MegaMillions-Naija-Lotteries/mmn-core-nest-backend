@@ -14,7 +14,6 @@ import {
     link: varchar("link", { length: 255 }),
     config: varchar("config", { length: 255 }),
     status: int("status"),
-    acaptureMethod: varchar("acapture_method", { length: 255 }),
   
     createdAt: timestamp("created_at"),
     updatedAt: timestamp("updated_at"),

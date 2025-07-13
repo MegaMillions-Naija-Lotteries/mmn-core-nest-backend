@@ -8,8 +8,8 @@ import {
   export const paymentMethods = mysqlTable("Paymentmethod", {
     id: int("id").primaryKey().autoincrement().notNull(),
   
-    userId: int("user_id"),
-    managerId: int("manager_id"),
+    userId: int("userId"),
+    managerId: int("managerId"),
   
     type: varchar("type", { length: 255 }),
     info: varchar("info", { length: 255 }),
