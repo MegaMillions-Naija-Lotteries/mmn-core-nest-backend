@@ -1,5 +1,7 @@
 // app.module.ts
 import { Module } from '@nestjs/common';
+import { AppModule as AppRootModule } from './app/app.module';
+
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 // Feature modules
@@ -21,6 +23,7 @@ import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
   imports: [
+    AppRootModule,
     ConfigModule.forRoot({ isGlobal: true }),
     HttpModule.register({
       timeout: 10000,
@@ -50,7 +53,7 @@ import { TransactionModule } from './transaction/transaction.module';
     RadioDrawModule,
     TransactionModule,
   ],
-  controllers:[PaymentController]
-  
+  controllers: [PaymentController],
+  providers: []
 })
 export class AppModule {}
