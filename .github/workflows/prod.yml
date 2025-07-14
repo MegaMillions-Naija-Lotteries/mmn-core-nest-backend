@@ -25,8 +25,11 @@ jobs:
           npm install
           npm run build
 
+      - name: List dist directory
+        run: ls -R dist
+
       - name: Zip artifact for deployment
-        run: zip -r release.zip dist package.json package-lock.json
+        run: zip -r release.zip dist node_modules
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
