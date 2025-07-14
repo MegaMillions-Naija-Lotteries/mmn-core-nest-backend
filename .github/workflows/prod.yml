@@ -5,14 +5,14 @@ name: Production - mmn-core-nest-backend
 on:
   push:
     branches:
-      - later
+      - main
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read 
 
     steps:
       - uses: actions/checkout@v4
@@ -22,10 +22,10 @@ jobs:
         with:
           node-version: '22.x'
 
-      - name: npm install, build
+      - name: npm install and build
         run: |
           npm install
-          npm run build --if-present
+          npm run build
 
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
@@ -57,4 +57,4 @@ jobs:
           app-name: 'mmn-core-nest-backend'
           slot-name: 'Production'
           package: .
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C1FDB6F07DB140F58D55BC42BF24DAEF }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_BB0745CE62B644BF9C4408BC88297303 }}
