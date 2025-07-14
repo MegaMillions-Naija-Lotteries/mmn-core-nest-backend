@@ -15,13 +15,13 @@
 //         const user = config.get('DB_USER');
 //         const password = config.get('DB_PASSWORD');
 //         const database = config.get('DB_NAME');
-        
+
 //         const connection = await mysql.createConnection({
 //           host, user, password, database,
 //         });
-        
+
 //         const driver = drizzle(connection, { schema, mode: 'default'});
-        
+
 //         return {
 //           name: 'default',
 //           type: 'mysql',
@@ -49,13 +49,50 @@ const mysql = (mysqlImport as any).default || mysqlImport;
       provide: 'DATABASE',
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
+        const env = process.env.NODE_ENV;
+        let host, port, user, password, database;
+        if (env === 'production') {
+          host = configService.get<string>('PROD_DB_HOST');
+          port = configService.get<number>('PROD_DB_PORT') || 3306;
+          user = configService.get<string>('PROD_DB_USERNAME');
+          password = configService.get<string>('PROD_DB_PASSWORD');
+          database = configService.get<string>('PROD_DB_DATABASE');
+        } else if (env === 'staging') {
+          host = configService.get<string>('STAGING_DB_HOST');
+          port = configService.get<number>('STAGING_DB_PORT') || 3306;
+          user = configService.get<string>('STAGING_DB_USERNAME');
+          password = configService.get<string>('STAGING_DB_PASSWORD');
+          database = configService.get<string>('STAGING_DB_DATABASE');
+        } else {
+          host = configService.get<string>('DB_HOST');
+          port = configService.get<number>('DB_PORT') || 3306;
+          user = configService.get<string>('DB_USERNAME');
+          password = configService.get<string>('DB_PASSWORD');
+          database = configService.get<string>('DB_DATABASE');
+        }
+        // Warn if any DB env variable is missing
+        if (!host || !port || !user || !password || !database) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            `\u26A0\uFE0F  Warning: One or more DB environment variables are missing!` +
+              `\n  host: ${host}` +
+              `\n  port: ${port}` +
+              `\n  user: ${user}` +
+              `\n  password: ${password ? '***' : ''}` +
+              `\n  database: ${database}`,
+          );
+        }
+        // eslint-disable-next-line no-console
+        console.log(
+          `\u{1F4BE} Connecting to DB: \u{1F5A5} ${host}:${port} \u{1F4D1} DB Name: \u{1F4C1} ${database}`,
+        );
         const pool = mysql.createPool({
-          host: configService.get<string>('DB_HOST'),
-          user: configService.get<string>('DB_USER'),
-          password: configService.get<string>('DB_PASSWORD'),
-          database: configService.get<string>('DB_NAME'),
+          host,
+          port,
+          user,
+          password,
+          database,
         });
-
         return drizzle(pool);
       },
     },
@@ -63,4 +100,3 @@ const mysql = (mysqlImport as any).default || mysqlImport;
   exports: ['DATABASE'],
 })
 export class DatabaseModule {}
-
