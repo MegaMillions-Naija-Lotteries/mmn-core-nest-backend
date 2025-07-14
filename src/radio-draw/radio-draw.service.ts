@@ -100,10 +100,10 @@ export class RadioDrawService {
       status: 'active',
       maxEntries,
       prizes,
-      drawSettings,
+      drawSettings: drawSettings || {},
       totalEntries: eligibleTickets.length,
     };
-
+    console.log('Draw data being inserted:', drawData);
     const [newDraw] = await this.db
       .insert(radioDraws)
       .values(drawData)
