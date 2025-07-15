@@ -61,6 +61,12 @@ export class AuthService {
         if (!userWithoutPassword.id || !userWithoutPassword.email) {
             throw new BadRequestException('User creation failed');
         }
+        // Find the station the user belongs to
+        const stationLinks = await this.db
+            .select()
+            .from(schema.stationUsers)
+            .where(eq(schema.stationUsers.userId, user.id));
+        const stationIds = stationLinks.map((link) => link.stationId);
         const token = await this.signToken(userWithoutPassword.id, userWithoutPassword.email);
         return {
             ...userWithoutPassword,
@@ -75,7 +81,8 @@ export class AuthService {
                 secret: this.config.get('JWT_SECRET')
             }),
             idAgent: userWithoutPassword.id,
-            idTerminal: 0
+            idTerminal: 0,
+            stationIds
         };
     }
 
