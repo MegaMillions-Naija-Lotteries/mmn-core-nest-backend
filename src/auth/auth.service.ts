@@ -9,6 +9,7 @@ import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { CreateUserDto } from "./dto/create-user.dto";
 import * as utils from "../common/utils";
+import * as bcrypt from 'bcrypt';
 import { title } from "process";
 
 @Injectable()
@@ -46,7 +47,11 @@ export class AuthService {
         if (typeof user.passwordHash !== 'string') {
             throw new BadRequestException('Invalid credentials');
         }
-        const pwMatches = await argon.verify(user.passwordHash, dto.password);
+        const pwMatches =
+            typeof user.passwordHash === 'string' &&
+            user.passwordHash.startsWith('$argon2')
+                ? await argon.verify(user.passwordHash, dto.password)
+                : await bcrypt.compare(dto.password, user.passwordHash);
         if (!pwMatches) {
             throw new BadRequestException('Invalid credentials');
         }
