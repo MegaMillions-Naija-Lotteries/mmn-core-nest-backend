@@ -83,6 +83,7 @@ export class RadioShowController {
     }
     @Get(':id')
     @Version('1')
+    @Public()
     async findOne(@Param('id') id: number) {
         const show = await this.radioShowService.findOne(id);
         if (!show) {

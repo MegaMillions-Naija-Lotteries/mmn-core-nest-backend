@@ -255,7 +255,7 @@ export class RadioShowService {
             .limit(1);
 
         if (!showWithStation) {
-            return null;
+            throw new NotFoundException(`Radio Show with ID ${id} not found`);
         }
 
         // Optionally, parse days from JSON string to array
