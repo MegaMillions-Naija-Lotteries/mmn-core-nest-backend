@@ -197,11 +197,12 @@ export class RadioStationService {
     }
 
     async findOne(id: number, user: { role: number, stationId: number[] }):Promise<SelectRadioStation & {shows: SelectRadioShow[]}>{
-      if (user.role !== USER_ROLE.ROLE_ADMIN){
-        if (!user.stationId.includes(id)) {
-          throw new NotFoundException(`Radio Station not found`)
-        }
-      }
+      // if (user.role !== USER_ROLE.ROLE_ADMIN){
+      console.log(user)
+        // if (!user.stationId.includes(id)) {
+        //   throw new NotFoundException(`Radio Station not found`)
+        // }
+      // }
         const [station] = await this.db.select()
         .from(radioStations)
         .leftJoin(

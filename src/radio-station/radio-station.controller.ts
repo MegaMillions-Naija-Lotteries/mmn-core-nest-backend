@@ -8,20 +8,16 @@ import {
     Delete,
     Query,
     ParseIntPipe,
-    UseGuards,
     Version,
   } from '@nestjs/common';
   import { RadioStationService } from './radio-station.service';
   import { CreateRadioStationDto } from './dto/create-radio-station.dto';
   import { UpdateRadioStationDto } from './dto/update-radio-station.dto';
-import { JwtGuard } from 'src/auth/guard';
-import { RolesGuard } from 'src/auth/roles/roles.guard';
 import { Roles } from 'src/auth/roles/roles.decorator';
 import { USER_ROLE } from 'src/auth/roles/roles.constant';
 import { GetUser } from 'src/auth/decorator';
 import { Public } from 'src/auth/decorator/public.decorator';
 
-  @UseGuards(JwtGuard, RolesGuard)
   @Controller('stations')
   export class RadioStationController{
     constructor(private readonly radioStationService: RadioStationService) {}
