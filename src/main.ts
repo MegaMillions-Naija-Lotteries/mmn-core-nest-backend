@@ -17,6 +17,13 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI, // Enables /v1/ routes
   });
+  app.enableCors(
+    {
+      origin: '*',
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      credentials: true,
+    }
+  );
   const configDoc = new DocumentBuilder()
     .setTitle('MMN Radio Raffle API Documentation')
     .setDescription('MMN Radio Raffle API Documentation')
