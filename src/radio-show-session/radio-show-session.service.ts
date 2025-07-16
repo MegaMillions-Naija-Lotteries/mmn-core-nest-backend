@@ -35,7 +35,7 @@ export class RadioShowSessionService {
                 stationId: schema.stationUsers.stationId,
             })
             .from(schema.stationUsers)
-            .where(eq(schema.stationUsers.userId, user.id));
+            .where(user ? eq(schema.stationUsers.userId, user.id) : sql`true`)
 
         const userStationIds = userStations.map(us => us.stationId);
 

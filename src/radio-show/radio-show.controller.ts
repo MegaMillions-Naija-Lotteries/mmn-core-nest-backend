@@ -66,25 +66,25 @@ export class RadioShowController {
         };
         return this.radioShowService.findAllByUser(user, filters);
     }
-@Get('/station/:stationId')
-@Public()
-@Version('1')
-async getShowsByStation(
-    @Param('stationId') stationId: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-) {
-    const filters: any = {
-        stationId: Number(stationId),
-        page: page ? Number(page) : undefined,
-        limit: limit ? Number(limit) : undefined,
-    };
-    return this.radioShowService.findAll(filters);
-}
+    @Get('/station/:stationId')
+    @Public()
+    @Version('1')
+    async getShowsByStation(
+        @Param('stationId') stationId: string,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+    ) {
+        const filters: any = {
+            stationId: Number(stationId),
+            page: page ? Number(page) : undefined,
+            limit: limit ? Number(limit) : undefined,
+        };
+        return this.radioShowService.findAll(filters);
+    }
     @Get(':id')
     @Version('1')
-    async findOne(@Param('id') id: string) {
-        const show = await this.radioShowService.findOne(Number(id));
+    async findOne(@Param('id') id: number) {
+        const show = await this.radioShowService.findOne(id);
         if (!show) {
             // You may want to use NotFoundException from @nestjs/common
             // but for now, just return a 404-like object
