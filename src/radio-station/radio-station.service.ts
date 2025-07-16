@@ -1,6 +1,7 @@
 import { Injectable, Inject, NotFoundException } from "@nestjs/common";
 
-import { schema, stationUsers, users } from '../database/schema';
+import { schema, stationUsers, users, radioShows } from '../database/schema';
+import type { SelectRadioShow } from '../database/radio-show.entity';
 import type { MySql2Database } from "drizzle-orm/mysql2";
 import { CreateRadioStationDto } from "./dto/create-radio-station.dto";
 import { UpdateRadioStationDto } from "./dto/update-radio-station.dto";
@@ -195,17 +196,35 @@ export class RadioStationService {
     };
     }
 
-    async findOne(id: number):Promise<SelectRadioStation>{
+    async findOne(id: number, user: { role: number, stationId: number[] }):Promise<SelectRadioStation & {shows: SelectRadioShow[]}>{
+      if (user.role !== USER_ROLE.ROLE_ADMIN){
+        if (!user.stationId.includes(id)) {
+          throw new NotFoundException(`Radio Station not found`)
+        }
+      }
         const [station] = await this.db.select()
         .from(radioStations)
-        .where(eq(radioStations.id, id))
+        .leftJoin(
+          radioShows,
+          eq(radioShows.stationId, radioStations.id),
+        )
+        .where(eq(schema.radioStations.id, id))
         .limit(1);
 
         if(!station) {
             throw new NotFoundException(`Radio Station with ID ${id} not found`)
         }
 
-        return station;
+        return {
+          id: station.stations.id,
+          name: station.stations.name,
+          link: station.stations.link,
+          logo: station.stations.logo,
+          isActive: station.stations.isActive,
+          createdAt: station.stations.createdAt,
+          updatedAt: station.stations.updatedAt,
+          shows: station.radio_shows ? [station.radio_shows] : [],
+        } as SelectRadioStation & { shows: SelectRadioShow[] };
     }
 
     async update(id: number, updateRadioStationDto: UpdateRadioStationDto): Promise<SelectRadioStation> {
@@ -217,13 +236,13 @@ export class RadioStationService {
         await this.db
           .update(radioStations)
           .set(updateData)
-          .where(eq(radioStations.id, id));
+          .where(eq(schema.radioStations.id, id));
         
         // Get the updated record
         const [updatedStation] = await this.db
           .select()
           .from(radioStations)
-          .where(eq(radioStations.id, id))
+          .where(eq(schema.radioStations.id, id))
           .limit(1);
         
         if (!updatedStation) {
@@ -238,7 +257,7 @@ export class RadioStationService {
       const [stationToDelete] = await this.db
         .select()
         .from(radioStations)
-        .where(eq(radioStations.id, id))
+        .where(eq(schema.radioStations.id, id))
         .limit(1);
       
       if (!stationToDelete) {
@@ -247,7 +266,7 @@ export class RadioStationService {
       
       await this.db
         .delete(radioStations)
-        .where(eq(radioStations.id, id));
+        .where(eq(schema.radioStations.id, id));
       
       return { message: `Radio station ${stationToDelete.name} has been deleted` };
     }

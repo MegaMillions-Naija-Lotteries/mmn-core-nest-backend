@@ -13,10 +13,12 @@ import { RadioShowSessionController } from 'src/radio-show-session/radio-show-se
 import { RadioShowSessionService } from 'src/radio-show-session/radio-show-session.service';
 import { RadioDrawController } from 'src/radio-draw/radio-draw.controller';
 import { RadioDrawService } from 'src/radio-draw/radio-draw.service';
+import { RadioJackpotDrawController } from 'src/radio-jackpot-draw/radio-jackpot-draw.controller';
+import { RadioJackpotDrawService } from 'src/radio-jackpot-draw/radio-jackpot-draw.service';
 
 @Module({
-    controllers: [RadioTicketController, RadioStationController, RadioShowController, RadioShowSessionController, RadioDrawController],
-    providers: [RadioTicketService, AuthService, RadioStationService, RadioShowService, RadioShowSessionService, RadioDrawService],
+    controllers: [RadioTicketController, RadioStationController, RadioShowController, RadioShowSessionController, RadioDrawController, RadioJackpotDrawController],
+    providers: [RadioTicketService, AuthService, RadioStationService, RadioShowService, RadioShowSessionService, RadioDrawService, RadioJackpotDrawService],
     imports: [DatabaseModule, JwtModule.register({}), ConfigModule],
 })
 export class RadioModule {}

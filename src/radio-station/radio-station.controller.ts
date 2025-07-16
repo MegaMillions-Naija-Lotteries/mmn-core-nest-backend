@@ -65,8 +65,10 @@ import { Public } from 'src/auth/decorator/public.decorator';
 
     @Get(':id')
     @Version('1')
-    findOne(@Param('id', ParseIntPipe) id: number) {
-        return this.radioStationService.findOne(id);
+    findOne(
+        @Param('id', ParseIntPipe) id: number,
+        @GetUser() user: any) {
+        return this.radioStationService.findOne(id, user);
     }
 
     // attach the station to a user and change the user to oap or station
