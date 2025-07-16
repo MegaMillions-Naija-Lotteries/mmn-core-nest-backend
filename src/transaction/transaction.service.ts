@@ -16,59 +16,63 @@ export class TransactionService {
         endDate?: string;
     } = {}) {
         const whereClauses: any[] = [];
-        if (filters.stationId) {
-            whereClauses.push(
-                eq(
-                    sql`CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(${schema.transactions.description}, 'Station: ', -1), ',', 1) AS UNSIGNED)`,
-                    filters.stationId,
-                ),
-            );
-        }
+        // if (filters.stationId) {
+        //     whereClauses.push(
+        //         eq(
+        //             sql`CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(${schema.transactions.description}, 'Station: ', -1), ',', 1) AS UNSIGNED)`,
+        //             filters.stationId,
+        //         ),
+        //     );
+        // }
 
-        if (filters.drawId) {
-            whereClauses.push(
-                eq(
-                    sql`CAST(NULLIF(SUBSTRING_INDEX(SUBSTRING_INDEX(${schema.transactions.description}, 'Draw: ', -1), ',', 1), 'None') AS UNSIGNED)`,
-                    filters.drawId,
-                ),
-            );
-        }
+        // if (filters.drawId) {
+        //     whereClauses.push(
+        //         eq(
+        //             sql`CAST(NULLIF(SUBSTRING_INDEX(SUBSTRING_INDEX(${schema.transactions.description}, 'Draw: ', -1), ',', 1), 'None') AS UNSIGNED)`,
+        //             filters.drawId,
+        //         ),
+        //     );
+        // }
 
-        if (filters.quantity) {
-            whereClauses.push(
-                eq(
-                    sql`CAST(SUBSTRING_INDEX(${schema.transactions.description}, 'Quantity: ', -1) AS UNSIGNED)`,
-                    filters.quantity,
-                ),
-            );
-        }
-        if (filters.startDate) {
-            whereClauses.push(
-                and(
-                    eq(schema.transactions.type, 'Radio ticket purchase'),
-                    gte(schema.transactions.createdAt, new Date(filters.startDate)),
-                ),
-            );
-        }
-        if (filters.endDate) {
-            whereClauses.push(
-                and(
-                    eq(schema.transactions.type, 'Radio ticket purchase'),
-                    lt(schema.transactions.createdAt, new Date(filters.endDate)),
-                ),
-            );
-        }
+        // if (filters.quantity) {
+        //     whereClauses.push(
+        //         eq(
+        //             sql`CAST(SUBSTRING_INDEX(${schema.transactions.description}, 'Quantity: ', -1) AS UNSIGNED)`,
+        //             filters.quantity,
+        //         ),
+        //     );
+        // }
+        // if (filters.startDate) {
+        //     whereClauses.push(
+        //         and(
+        //             eq(schema.transactions.type, 'Radio ticket purchase'),
+        //             gte(schema.transactions.createdAt, new Date(filters.startDate)),
+        //         ),
+        //     );
+        // }
+        // if (filters.endDate) {
+        //     whereClauses.push(
+        //         and(
+        //             eq(schema.transactions.type, 'Radio ticket purchase'),
+        //             lt(schema.transactions.createdAt, new Date(filters.endDate)),
+        //         ),
+        //     );
+        // }
+        console.log(whereClauses);
 
-        const query = this.db
+        // const query = this.db
+        //     .select()
+        //     .from(schema.transactions)
+        //     .where(and(...whereClauses));
+
+        // if (filters.page && filters.limit) {
+        //     query.limit(filters.limit).offset((filters.page - 1) * filters.limit);
+        // }
+        // return query;
+        return await this.db
             .select()
             .from(schema.transactions)
-            .where(and(...whereClauses));
-
-        if (filters.page && filters.limit) {
-            query.limit(filters.limit).offset((filters.page - 1) * filters.limit);
-        }
-
-        return query;
+            .limit(10);
     }
     async getTransactionByStation(stationId?: number): Promise<any> {
         if (stationId) {

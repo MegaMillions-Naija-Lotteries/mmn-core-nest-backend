@@ -7,9 +7,9 @@ import { USER_ROLE } from 'src/auth/roles/roles.constant';
 export class TransactionController {
     constructor(private transactionService: TransactionService) {}
 
-    @Get('/station')
+    @Get('/radio')
     @Version('1')
-    @Roles(USER_ROLE.ROLE_ADMIN)
+    // @Roles(USER_ROLE.ROLE_ADMIN)
     getAllRadioTransactions(
         @Query('stationId') stationId?: number,
         @Query('drawId') drawId?: number,
@@ -33,6 +33,7 @@ export class TransactionController {
 
     @Get('/station/:stationId')
     @Version('1')
+    // @Roles(USER_ROLE.ROLE_ADMIN)
     getTransactionByStation(@Param('stationId') stationId?: number) {
         return this.transactionService.getTransactionByStation(stationId);
     }       
