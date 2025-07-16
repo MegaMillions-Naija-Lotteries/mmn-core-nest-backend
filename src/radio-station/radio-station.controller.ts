@@ -9,6 +9,7 @@ import {
     Query,
     ParseIntPipe,
     UseGuards,
+    Version,
   } from '@nestjs/common';
   import { RadioStationService } from './radio-station.service';
   import { CreateRadioStationDto } from './dto/create-radio-station.dto';
@@ -26,6 +27,7 @@ import { Public } from 'src/auth/decorator/public.decorator';
     constructor(private readonly radioStationService: RadioStationService) {}
 
     @Post()
+    @Version('1')
     @Roles(USER_ROLE.ROLE_ADMIN, USER_ROLE.ROLE_STATION)
     create(@Body() createRadioStationDto: CreateRadioStationDto){
         return this.radioStationService.create(createRadioStationDto)
@@ -33,6 +35,7 @@ import { Public } from 'src/auth/decorator/public.decorator';
 
     @Public()
     @Get()
+    @Version('1')
     findAll(
         @Query('name') name?: string,
         @Query('isActive') isActive?: string,
@@ -46,6 +49,7 @@ import { Public } from 'src/auth/decorator/public.decorator';
     }
 
     @Get('/user')
+    @Version('1')
     findAllByUser(
         @GetUser() user: any,
         @Query('name') name?: string,
@@ -60,12 +64,14 @@ import { Public } from 'src/auth/decorator/public.decorator';
     }
 
     @Get(':id')
+    @Version('1')
     findOne(@Param('id', ParseIntPipe) id: number) {
         return this.radioStationService.findOne(id);
     }
 
     // attach the station to a user and change the user to oap or station
     @Post(':id/attach-user')
+    @Version('1')
     @Roles(USER_ROLE.ROLE_ADMIN, USER_ROLE.ROLE_STATION)
     async attachUserToStation(
       @Param('id', ParseIntPipe) stationId: number,
@@ -77,6 +83,7 @@ import { Public } from 'src/auth/decorator/public.decorator';
     }
     
     @Patch(':id')
+    @Version('1')
     update(
         @Param('id', ParseIntPipe) id: number,
         @Body() updateRadioStationDto: UpdateRadioStationDto,
@@ -85,6 +92,7 @@ import { Public } from 'src/auth/decorator/public.decorator';
     }
 
     @Delete(':id')
+    @Version('1')
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.radioStationService.remove(id);
     }
