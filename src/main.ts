@@ -19,7 +19,7 @@ async function bootstrap() {
   });
   app.enableCors(
     {
-      origin: '*',
+      origin: ['*','http://localhost:4200', 'http://localhost:3000', 'http://127.0.0.1:3000', 'https://mmnraffle.com'],
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
       credentials: true,
     }
