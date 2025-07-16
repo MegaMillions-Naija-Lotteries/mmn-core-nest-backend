@@ -21,7 +21,11 @@ export class RadioStationService {
         //insert into the db
         const result = await this.db
             .insert(radioStations)
-            .values(createRadioStationDto);
+            .values({
+                ...createRadioStationDto,
+                createdAt: sql`CURRENT_TIMESTAMP`,
+                updatedAt: sql`CURRENT_TIMESTAMP`,
+            });
         // get the id of the new row
         const insertId = result[0].insertId;
         // use it to get the row
