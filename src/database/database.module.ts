@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { drizzle } from 'drizzle-orm/mysql2';
 import * as mysqlImport from 'mysql2/promise';
@@ -11,6 +11,7 @@ const mysql = (mysqlImport as any).default || mysqlImport;
       provide: 'DATABASE',
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
+        const logger = new Logger('DatabaseModule');
         const env = process.env.NODE_ENV;
         let host, port, user, password, database;
 
@@ -35,7 +36,7 @@ const mysql = (mysqlImport as any).default || mysqlImport;
         }
 
         if (!host || !port || !user || !password || !database) {
-          console.warn(
+          logger.warn(
             `\u26A0\uFE0F  Warning: One or more DB environment variables are missing!` +
               `\n  host: ${host}` +
               `\n  port: ${port}` +
@@ -45,7 +46,7 @@ const mysql = (mysqlImport as any).default || mysqlImport;
           );
         }
 
-        console.log(
+        logger.log(
           `\u{1F4BE} Connecting to DB: \u{1F5A5} ${host}:${port} \u{1F4D1} DB Name: \u{1F4C1} ${database}`,
         );
 
