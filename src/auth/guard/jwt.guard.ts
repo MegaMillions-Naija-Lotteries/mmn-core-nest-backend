@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext } from "@nestjs/common";
+import { CanActivate, ExecutionContext, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { AuthGuard } from "@nestjs/passport";
 import { Observable } from "rxjs";
@@ -20,4 +20,11 @@ export class JwtGuard extends AuthGuard('jwt') implements CanActivate{
         }
         return super.canActivate(context);
     }
+      // ✅ This is the missing piece!
+  handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
+    if (err || !user) {
+      throw err || new UnauthorizedException('Unauthorized');
+    }
+    return user; // attaches the returned user to request.user
+  }
 }

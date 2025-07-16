@@ -66,7 +66,7 @@ export class RadioShowSessionService {
             .insert(schema.radioShowSessions)
             .values({
                 showId: createRadioShowSessionDto.showId,
-                userId: user.id,
+                userId: user ? user.id : 1,
                 startTime: new Date(),
                 endTime: null,
                 status: 'active',
@@ -128,7 +128,7 @@ export class RadioShowSessionService {
         }
         // Optionally, filter by userId if sessions are user-specific
         // Only restrict to userId if NOT admin or station
-        if (user.role !== USER_ROLE.ROLE_ADMIN && user.role !== USER_ROLE.ROLE_STATION) {
+        if (user && user.role !== USER_ROLE.ROLE_ADMIN && user.role !== USER_ROLE.ROLE_STATION) {
             whereClauses.push(eq(schema.radioShowSessions.userId, user.id));
         }
         
@@ -181,7 +181,7 @@ export class RadioShowSessionService {
         const { id: _id, userId: _userId, showId: _showId, createdAt: _createdAt, ...updateFields } = updateDto || {};
 
         if (Object.keys(updateFields).length === 0) {
-            throw new Error('No valid fields to update');
+            throw new BadRequestException('No valid fields to update');
         }
 
         // Set updatedAt to now

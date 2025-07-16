@@ -1,10 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Version } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, Version } from '@nestjs/common';
 import { RadioShowSessionService } from './radio-show-session.service';
 import { GetUser } from 'src/auth/decorator';
 import { USER_ROLE } from 'src/auth/roles/roles.constant';
 import { Roles } from 'src/auth/roles/roles.decorator';
 import { CreateRadioShowSessionDto } from './dto/create-radio-show-session.dto';
+import { RolesGuard } from 'src/auth/roles/roles.guard';
+import { JwtGuard } from 'src/auth/guard/jwt.guard';
+import { schema } from 'src/database/schema';
 
+UseGuards(JwtGuard, RolesGuard)
 @Controller('sessions')
 export class RadioShowSessionController {
     constructor ( private radioShowSessionService:RadioShowSessionService) {}
@@ -12,7 +16,8 @@ export class RadioShowSessionController {
     @Post()
     @Version('1')
     @Roles(USER_ROLE.ROLE_OAP, USER_ROLE.ROLE_STATION)
-    async create(@GetUser() user:any, @Body() createRadioShowSessionDto: CreateRadioShowSessionDto) {
+    async create(@GetUser() user:typeof schema.users.$inferSelect, @Body() createRadioShowSessionDto: CreateRadioShowSessionDto) {
+        console.log(user);  
         return this.radioShowSessionService.create(user, createRadioShowSessionDto);
     }
     // Get all sessions
@@ -201,6 +206,7 @@ export class RadioShowSessionController {
         }
         // Only allow end if user is admin, station, or the session owner
         if (
+            user &&
             user.role !== USER_ROLE.ROLE_ADMIN &&
             user.role !== USER_ROLE.ROLE_STATION &&
             session.userId !== user.id
