@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, Version } from '@nestjs/common';
 import { JwtGuard } from 'src/auth/guard';
 import { RolesGuard } from 'src/auth/roles/roles.guard';
 import { RadioShowSessionService } from './radio-show-session.service';
@@ -13,6 +13,7 @@ export class RadioShowSessionController {
     constructor ( private radioShowSessionService:RadioShowSessionService) {}
 
     @Post()
+    @Version('1')
     @Roles(USER_ROLE.ROLE_OAP, USER_ROLE.ROLE_STATION)
     async create(@GetUser() user:any, @Body() createRadioShowSessionDto: CreateRadioShowSessionDto) {
         return this.radioShowSessionService.create(user, createRadioShowSessionDto);
@@ -21,6 +22,7 @@ export class RadioShowSessionController {
     // GET /radio-show-sessions
     @UseGuards(JwtGuard, RolesGuard)
     @Get()
+    @Version('1')
     async getAllSessions(
         @GetUser() user:any,
         @Query('page') page?: string,
@@ -50,6 +52,7 @@ export class RadioShowSessionController {
     // GET /radio-show-sessions/:id
 
     @Get(':id')
+    @Version('1')
     async getSessionById(
         @GetUser() user: any,
         @Param('id') id: string
@@ -85,6 +88,7 @@ export class RadioShowSessionController {
     // Update a radio show session by ID
     // PATCH /radio-show-sessions/:id
     @Patch(':id')
+    @Version('1')
     @Roles(USER_ROLE.ROLE_ADMIN)
     async updateSession(
         @GetUser() user: any,
@@ -130,6 +134,7 @@ export class RadioShowSessionController {
     }
     // DELETE /radio-show-sessions/:id
     @Delete(':id')
+    @Version('1')
     @Roles(USER_ROLE.ROLE_ADMIN)
     async deleteSession(
         @GetUser() user: any,
@@ -177,6 +182,7 @@ export class RadioShowSessionController {
 
     // PATCH /radio-show-sessions/:id/end
     @Patch(':id/end')
+    @Version('1')
     async endSession(
         @GetUser() user: any,
         @Param('id') id: string
@@ -230,6 +236,7 @@ export class RadioShowSessionController {
     }
     // GET /radio-show-session/:id/draws
     @Get(':id/draws')
+    @Version('1')
     async getSessionDraws(
         @GetUser() user: any,
         @Param('id') id: string

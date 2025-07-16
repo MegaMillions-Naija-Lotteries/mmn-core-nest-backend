@@ -9,19 +9,21 @@ import {
     ParseIntPipe,
     HttpStatus,
     HttpException,
+    Version,
 } from '@nestjs/common';
 import { SelectRadioDraw } from '../database/radio-draw.entity';
 import { RadioDrawService, ConductDrawDto, DrawResult } from './radio-draw.service';
 import { CreateRadioDrawDto } from './dto/create-radio-draw.dto';
 
   
-  @Controller('radio-draws')
+  @Controller('draws')
   export class RadioDrawController {
     constructor(private readonly radioDrawService: RadioDrawService) {}
     /*
     * Create a new draw
     */
     @Post()
+    @Version('1')
     async create(@Body() createRadioDrawDto: CreateRadioDrawDto){
       return this.radioDrawService.create(createRadioDrawDto);
     }
@@ -29,6 +31,7 @@ import { CreateRadioDrawDto } from './dto/create-radio-draw.dto';
      * Conduct a new draw
      */
     @Post('create-conduct')
+    @Version('1')
     async conductDraw(@Body() conductDrawDto: ConductDrawDto): Promise<{
       success: boolean;
       message: string;
@@ -57,6 +60,7 @@ import { CreateRadioDrawDto } from './dto/create-radio-draw.dto';
      * Redraw if current winner doesn't pick up
      */
     @Put(':drawId/redraw')
+    @Version('1')
     async redraw(@Param('drawId', ParseIntPipe) drawId: number): Promise<{
       success: boolean;
       message: string;
@@ -85,6 +89,7 @@ import { CreateRadioDrawDto } from './dto/create-radio-draw.dto';
      * Mark draw as completed (winner picked up)
      */
     @Put(':drawId/complete')
+    @Version('1')
     async completeDraw(@Param('drawId', ParseIntPipe) drawId: number): Promise<{
       success: boolean;
       message: string;
@@ -113,6 +118,7 @@ import { CreateRadioDrawDto } from './dto/create-radio-draw.dto';
      * Cancel a draw
      */
     @Delete(':drawId')
+    @Version('1')
     async cancelDraw(@Param('drawId', ParseIntPipe) drawId: number): Promise<{
       success: boolean;
       message: string;
@@ -141,6 +147,7 @@ import { CreateRadioDrawDto } from './dto/create-radio-draw.dto';
      * Get draw by ID
      */
     @Get(':drawId')
+    @Version('1')
     async getDrawById(@Param('drawId', ParseIntPipe) drawId: number): Promise<{
       success: boolean;
       message: string;
@@ -169,6 +176,7 @@ import { CreateRadioDrawDto } from './dto/create-radio-draw.dto';
      * Get all draws for a session
      */
     @Get('session/:sessionId')
+    @Version('1')
     async getDrawsBySession(@Param('sessionId', ParseIntPipe) sessionId: number): Promise<{
       success: boolean;
       message: string;
@@ -197,6 +205,7 @@ import { CreateRadioDrawDto } from './dto/create-radio-draw.dto';
      * Get draw statistics
      */
     @Get(':drawId/stats')
+    @Version('1')
     async getDrawStats(@Param('drawId', ParseIntPipe) drawId: number): Promise<{
       success: boolean;
       message: string;

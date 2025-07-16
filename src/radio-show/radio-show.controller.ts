@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, Version } from '@nestjs/common';
 import { RadioShowService } from './radio-show.service';
 import { CreateRadioShowDto } from './dto/create-radio-show.dto';
 import { UpdateRadioShowDto } from './dto/update-radio-show.dto';
@@ -15,6 +15,7 @@ export class RadioShowController {
     constructor(private readonly radioShowService: RadioShowService) {}
 
     @Post()
+    @Version('1')
     @Roles(USER_ROLE.ROLE_ADMIN, USER_ROLE.ROLE_STATION)
     async create(@Body() createRadioShowDto: CreateRadioShowDto) {
         return this.radioShowService.create(createRadioShowDto);
@@ -22,6 +23,7 @@ export class RadioShowController {
 
     @Public()
     @Get()
+    @Version('1')
     async findAll(
         @Query('name') name?: string,
         @Query('stationId') stationId?: string,
@@ -43,6 +45,7 @@ export class RadioShowController {
     }
 
     @Get('/user')
+    @Version('1')
     async findAllByUser(
         @Query('name') name?: string,
         @Query('stationId') stationId?: string,
@@ -65,6 +68,7 @@ export class RadioShowController {
     }
 @Get('/station/:stationId')
 @Public()
+@Version('1')
 async getShowsByStation(
     @Param('stationId') stationId: string,
     @Query('page') page?: string,
@@ -78,6 +82,7 @@ async getShowsByStation(
     return this.radioShowService.findAll(filters);
 }
     @Get(':id')
+    @Version('1')
     async findOne(@Param('id') id: string) {
         const show = await this.radioShowService.findOne(Number(id));
         if (!show) {
@@ -101,11 +106,13 @@ async getShowsByStation(
     }
 
     @Patch(':id')
+    @Version('1')
     async update(@Param('id') id: string, @Body() updateRadioShowDto: UpdateRadioShowDto) {
         return this.radioShowService.update(+id, updateRadioShowDto);
     }
 
     @Delete(':id')
+    @Version('1')
     async remove(@Param('id') id: string) {
         return this.radioShowService.remove(+id);
     }

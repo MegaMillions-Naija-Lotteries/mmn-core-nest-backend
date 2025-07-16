@@ -9,7 +9,7 @@ export class TransactionController {
 
     @Get('/radio')
     @Version('1')
-    // @Roles(USER_ROLE.ROLE_ADMIN)
+    @Roles(USER_ROLE.ROLE_ADMIN)
     getAllRadioTransactions(
         @Query('stationId') stationId?: number,
         @Query('drawId') drawId?: number,
@@ -34,7 +34,23 @@ export class TransactionController {
     @Get('/station/:stationId')
     @Version('1')
     // @Roles(USER_ROLE.ROLE_ADMIN)
-    getTransactionByStation(@Param('stationId') stationId?: number) {
-        return this.transactionService.getTransactionByStation(stationId);
+    getTransactionByStation(
+        @Param('stationId') stationId?: number,
+        @Query('drawId') drawId?: number,
+        @Query('quantity') quantity?: number,
+        @Query('page') page?: number,
+        @Query('limit') limit?: number,
+        @Query('start_date') startDate?: string,
+        @Query('end_date') endDate?: string,
+    ) {
+        const filter = {
+            drawId,
+            quantity,
+            page,
+            limit,
+            startDate,
+            endDate,
+        };
+        return this.transactionService.getTransactionByStation(stationId, filter);
     }       
 }

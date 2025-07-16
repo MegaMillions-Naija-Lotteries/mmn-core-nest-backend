@@ -16,65 +16,100 @@ export class TransactionService {
         endDate?: string;
     } = {}) {
         const whereClauses: any[] = [];
-        // if (filters.stationId) {
-        //     whereClauses.push(
-        //         eq(
-        //             sql`CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(${schema.transactions.description}, 'Station: ', -1), ',', 1) AS UNSIGNED)`,
-        //             filters.stationId,
-        //         ),
-        //     );
-        // }
+        if (filters.stationId) {
+            whereClauses.push(
+                eq(
+                    sql`CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(${schema.transactions.description}, 'Station: ', -1), ',', 1) AS UNSIGNED)`,
+                    filters.stationId,
+                ),
+            );
+        }
 
-        // if (filters.drawId) {
-        //     whereClauses.push(
-        //         eq(
-        //             sql`CAST(NULLIF(SUBSTRING_INDEX(SUBSTRING_INDEX(${schema.transactions.description}, 'Draw: ', -1), ',', 1), 'None') AS UNSIGNED)`,
-        //             filters.drawId,
-        //         ),
-        //     );
-        // }
+        if (filters.drawId) {
+            whereClauses.push(
+                eq(
+                    sql`CAST(NULLIF(SUBSTRING_INDEX(SUBSTRING_INDEX(${schema.transactions.description}, 'Draw: ', -1), ',', 1), 'None') AS UNSIGNED)`,
+                    filters.drawId,
+                ),
+            );
+        }
 
-        // if (filters.quantity) {
-        //     whereClauses.push(
-        //         eq(
-        //             sql`CAST(SUBSTRING_INDEX(${schema.transactions.description}, 'Quantity: ', -1) AS UNSIGNED)`,
-        //             filters.quantity,
-        //         ),
-        //     );
-        // }
-        // if (filters.startDate) {
-        //     whereClauses.push(
-        //         and(
-        //             eq(schema.transactions.type, 'Radio ticket purchase'),
-        //             gte(schema.transactions.createdAt, new Date(filters.startDate)),
-        //         ),
-        //     );
-        // }
-        // if (filters.endDate) {
-        //     whereClauses.push(
-        //         and(
-        //             eq(schema.transactions.type, 'Radio ticket purchase'),
-        //             lt(schema.transactions.createdAt, new Date(filters.endDate)),
-        //         ),
-        //     );
-        // }
-        console.log(whereClauses);
+        if (filters.quantity) {
+            whereClauses.push(
+                eq(
+                    sql`CAST(SUBSTRING_INDEX(${schema.transactions.description}, 'Quantity: ', -1) AS UNSIGNED)`,
+                    filters.quantity,
+                ),
+            );
+        }
+        if (filters.startDate) {
+            whereClauses.push(
+                and(
+                    eq(schema.transactions.type, 'Radio ticket purchase'),
+                    gte(schema.transactions.createdAt, new Date(filters.startDate)),
+                ),
+            );
+        }
+        if (filters.endDate) {
+            whereClauses.push(
+                and(
+                    eq(schema.transactions.type, 'Radio ticket purchase'),
+                    lt(schema.transactions.createdAt, new Date(filters.endDate)),
+                ),
+            );
+        }
 
-        // const query = this.db
-        //     .select()
-        //     .from(schema.transactions)
-        //     .where(and(...whereClauses));
-
-        // if (filters.page && filters.limit) {
-        //     query.limit(filters.limit).offset((filters.page - 1) * filters.limit);
-        // }
-        // return query;
-        return await this.db
+        const query = this.db
             .select()
             .from(schema.transactions)
-            .limit(10);
+            .where(and(...whereClauses));
+
+        if (filters.page && filters.limit) {
+            query.limit(filters.limit).offset((filters.page - 1) * filters.limit);
+        }
+        return query;
     }
-    async getTransactionByStation(stationId?: number): Promise<any> {
+    async getTransactionByStation(stationId?: number, filter?: {
+        drawId?: number;
+        quantity?: number;
+        page?: number;
+        limit?: number;
+        startDate?: string;
+        endDate?: string;
+    }): Promise<any> {
+        const whereClauses: any[] = [];
+        if (filter?.drawId) {
+            whereClauses.push(
+                eq(
+                    sql`CAST(NULLIF(SUBSTRING_INDEX(SUBSTRING_INDEX(${schema.transactions.description}, 'Draw: ', -1), ',', 1), 'None') AS UNSIGNED)`,
+                    filter.drawId,
+                ),
+            );
+        }
+        if (filter?.quantity) {
+            whereClauses.push(
+                eq(
+                    sql`CAST(SUBSTRING_INDEX(${schema.transactions.description}, 'Quantity: ', -1) AS UNSIGNED)`,
+                    filter.quantity,
+                ),
+            );
+        }
+        if (filter?.startDate) {
+            whereClauses.push(
+                and(
+                    eq(schema.transactions.type, 'Radio ticket purchase'),
+                    gte(schema.transactions.createdAt, new Date(filter.startDate)),
+                ),
+            );
+        }
+        if (filter?.endDate) {
+            whereClauses.push(
+                and(
+                    eq(schema.transactions.type, 'Radio ticket purchase'),
+                    lt(schema.transactions.createdAt, new Date(filter.endDate)),
+                ),
+            );
+        }
         if (stationId) {
             const [station] = await this.db
                 .select()

@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, Query, UseGuards, Version } from '@nestjs/common';
 import { RadioTicketService } from './radio-ticket.service';
 import { JwtGuard } from 'src/auth/guard';
 import { RolesGuard } from 'src/auth/roles/roles.guard';
@@ -13,6 +13,7 @@ export class RadioTicketController {
     constructor(private readonly radioTicketService: RadioTicketService) {}
 
     @Post('purchase')
+    @Version('1')
     async initRadioTicketPurchase(
         @Body('stationId') stationId: number,
         @Body('drawId') drawId: number,
@@ -31,6 +32,7 @@ export class RadioTicketController {
 
     @Public()
     @Post('guest-purchase')
+    @Version('1')
     async initGuestRadioTicketPurchase(
         @Body('phone') phone: string,
         @Body('stationId') stationId: number,
@@ -64,9 +66,10 @@ export class RadioTicketController {
 
     @Public()
     @Get('verify-payment')
+    @Version('1')
     async verifyRadioTicketPurchase(
         @Query('reference') reference: string,
-        paymentmethod:string
+        paymentmethod: string,
         // @Body('paymentmethod') paymentmethod: number
     ){
         console.log(reference)
