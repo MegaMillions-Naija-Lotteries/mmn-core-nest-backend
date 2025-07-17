@@ -16,6 +16,7 @@ export class TransactionService {
         endDate?: string;
     } = {}) {
         const whereClauses: any[] = [];
+        whereClauses.push(eq(schema.transactions.type, 'raffle'));
         if (filters.stationId) {
             whereClauses.push(
                 eq(
@@ -58,16 +59,22 @@ export class TransactionService {
                 ),
             );
         }
-
+        let offset = 0;
+        let limit = Number(filters.limit) ?? 10; // Default limit
+        
+        if(filters.page){
+            offset = (filters.page - 1) * limit;
+        }
+        
         const query = this.db
             .select()
             .from(schema.transactions)
-            .where(and(...whereClauses));
-
-        if (filters.page && filters.limit) {
-            query.limit(filters.limit).offset((filters.page - 1) * filters.limit);
-        }
-        return query;
+            .where(and(...whereClauses))
+            .limit(limit)
+            .offset(offset);
+        
+        const results = await query;
+        return results;
     }
     async getTransactionByStation(stationId?: number, filter?: {
         drawId?: number;
