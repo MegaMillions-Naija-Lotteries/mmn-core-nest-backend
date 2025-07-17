@@ -11,9 +11,20 @@ export class RadioShowSessionService {
         private db: MySql2Database<typeof schema>
     ) {}
     
-    async create(user:{id:number}, createRadioShowSessionDto: {
+    async create(createRadioShowSessionDto: {
         showId: number;
+        userId: number;
     }) {
+        // get the user using the user id
+        // if they exist continue if not throw an error
+        const [user] = await this.db
+            .select()
+            .from(schema.users)
+            .where(eq(schema.users.id, createRadioShowSessionDto.userId))
+            .limit(1);
+        if (!user) {
+            throw new BadRequestException('User not found');
+        }
         // check if the user and the show share a similar station if not throw a forbidden error
         // 1. Get the show and its stationId
         const [show] = await this.db
@@ -35,7 +46,7 @@ export class RadioShowSessionService {
                 stationId: schema.stationUsers.stationId,
             })
             .from(schema.stationUsers)
-            .where(user ? eq(schema.stationUsers.userId, user.id) : sql`true`)
+            .where(eq(schema.stationUsers.userId, user.id));
 
         const userStationIds = userStations.map(us => us.stationId);
 
@@ -66,7 +77,7 @@ export class RadioShowSessionService {
             .insert(schema.radioShowSessions)
             .values({
                 showId: createRadioShowSessionDto.showId,
-                userId: user ? user.id : 1,
+                userId: user.id,
                 startTime: new Date(),
                 endTime: null,
                 status: 'active',
@@ -128,7 +139,7 @@ export class RadioShowSessionService {
         }
         // Optionally, filter by userId if sessions are user-specific
         // Only restrict to userId if NOT admin or station
-        if (user && user.role !== USER_ROLE.ROLE_ADMIN && user.role !== USER_ROLE.ROLE_STATION) {
+        if (user.role !== USER_ROLE.ROLE_ADMIN && user.role !== USER_ROLE.ROLE_STATION) {
             whereClauses.push(eq(schema.radioShowSessions.userId, user.id));
         }
         
@@ -181,7 +192,7 @@ export class RadioShowSessionService {
         const { id: _id, userId: _userId, showId: _showId, createdAt: _createdAt, ...updateFields } = updateDto || {};
 
         if (Object.keys(updateFields).length === 0) {
-            throw new BadRequestException('No valid fields to update');
+            throw new Error('No valid fields to update');
         }
 
         // Set updatedAt to now

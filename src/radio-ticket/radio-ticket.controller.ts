@@ -12,6 +12,11 @@ import { Public } from 'src/auth/decorator/public.decorator';
 export class RadioTicketController {
     constructor(private readonly radioTicketService: RadioTicketService) {}
 
+    @Get('run/test')
+    async test() {
+        return 'test';
+    }
+    
     @Post('purchase')
     @Version('1')
     async initRadioTicketPurchase(
