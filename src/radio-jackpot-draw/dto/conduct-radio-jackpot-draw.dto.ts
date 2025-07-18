@@ -1,6 +1,6 @@
 import { IsNumber, IsNotEmpty, IsObject, IsOptional, IsString } from "class-validator";
 
-export class ConductRadioDrawDto {
+export class ConductRadioJackpotDrawDto {
     @IsNumber()
     @IsNotEmpty()
     sessionId: number;
@@ -9,9 +9,9 @@ export class ConductRadioDrawDto {
     @IsNotEmpty()
     showId: number;
 
-    @IsObject()
-    @IsOptional()
-    drawSettings: any;
+    @IsNumber()
+    @IsNotEmpty()
+    drawNumber: number;
 
     @IsString()
     @IsOptional()
@@ -28,4 +28,13 @@ export class ConductRadioDrawDto {
     @IsObject()
     @IsOptional()
     prizes?: any;
+
+    @IsObject()
+    @IsOptional()
+    drawSettings?: any;
+
+    @IsString()
+    entryDeadline?: string;
+
+    
 }
