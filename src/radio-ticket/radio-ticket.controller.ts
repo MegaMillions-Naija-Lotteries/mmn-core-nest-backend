@@ -83,7 +83,7 @@ export class RadioTicketController {
             reference,
             'paystack'
         ).then((result) => {
-            res.redirect(`http://localhost:3000/verify-payment?reference=${reference}`);
+            res.redirect(`https://8aa0c37fbc76.ngrok-free.app/verify-payment?reference=${reference}`);
         });
     }
 
