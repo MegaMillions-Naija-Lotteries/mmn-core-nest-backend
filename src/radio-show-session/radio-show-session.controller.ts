@@ -52,6 +52,7 @@ export class RadioShowSessionController {
 
     @Get(':id')
     @Version('1')
+    @Roles(USER_ROLE.ROLE_OAP)
     async getSessionById(
         @GetUser() user: any,
         @Param('id') id: string

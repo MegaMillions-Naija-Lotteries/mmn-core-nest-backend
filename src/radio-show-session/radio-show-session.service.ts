@@ -1,8 +1,10 @@
 import { BadRequestException, Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
-import { and, eq, inArray, Placeholder, sql, SQLWrapper } from 'drizzle-orm';
+import { and, asc, eq, inArray, Placeholder, sql, SQLWrapper } from 'drizzle-orm';
 import { MySql2Database } from 'drizzle-orm/mysql2';
 import { USER_ROLE } from 'src/auth/roles/roles.constant';
 import { schema } from 'src/database/schema';
+import { SelectRadioShowSession } from 'src/database/radio-show-session.entity';
+import { RadioShowSessionResponse } from './radio-show-session.dto';
 
 @Injectable()
 export class RadioShowSessionService {
@@ -173,7 +175,7 @@ export class RadioShowSessionService {
         };
     }
     // Get a single radio show session by ID
-    async getById(id: number) {
+    async getById(id: number): Promise<RadioShowSessionResponse | null> {
         // Fetch the radio show session by its ID
         const [session] = await this.db
             .select()
@@ -184,12 +186,47 @@ export class RadioShowSessionService {
         if (!session) {
             return null;
         }
-        return session;
+
+        const draws = await this.db
+            .select()
+            .from(schema.radioDraws)
+            .where(eq(schema.radioDraws.sessionId, id))
+            .orderBy(asc(schema.radioDraws.drawNumber));
+
+        const show = await this.db
+            .select()
+            .from(schema.radioShows)
+            .where(eq(schema.radioShows.id, session.showId))
+            .limit(1);
+
+        const stats = await this.db
+            .select({
+                total_draws: sql<number>`count(*)`,
+                completed_draws: sql<number>`count(case when ${eq(schema.radioDraws.status, 'completed')} then 1 end)`,
+                pending_draws: sql<number>`count(case when ${eq(schema.radioDraws.status, 'pending')} then 1 end)`,
+                active_draws: sql<number>`count(case when ${eq(schema.radioDraws.status, 'active')} then 1 end)`,
+                total_winners: sql<number>`count(case when ${schema.radioDraws.winningTicketId} is not null then 1 end)`,
+                totalEntries: sql<number>`sum(${schema.radioDraws.totalEntries})`,
+            })
+            .from(schema.radioDraws)
+            .where(eq(schema.radioDraws.sessionId, id));
+
+        if (!session) return null;
+
+        return {
+            session,
+            draws,
+            show: show[0],
+            stats: stats[0],
+            userId: session.userId,
+            status: session.status,
+        };
     }
+
     // Update a radio show session by ID
-    async updateById(id: number, updateDto: any) {
-        // Remove fields that should not be updated (e.g., id, userId, showId, createdAt)
-        const { id: _id, userId: _userId, showId: _showId, createdAt: _createdAt, ...updateFields } = updateDto || {};
+async updateById(id: number, updateDto: any) {
+    // Remove fields that should not be updated (e.g., id, userId, showId, createdAt)
+    const { id: _id, userId: _userId, showId: _showId, createdAt: _createdAt, ...updateFields } = updateDto || {};
 
         if (Object.keys(updateFields).length === 0) {
             throw new Error('No valid fields to update');
