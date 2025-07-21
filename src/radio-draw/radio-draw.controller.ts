@@ -197,7 +197,7 @@ import { USER_ROLE } from 'src/auth/roles/roles.constant';
         return {
           success: true,
           message: 'Draws retrieved successfully',
-          data: result,
+          data: result.data,
         };
       } catch (error) {
         throw new HttpException(

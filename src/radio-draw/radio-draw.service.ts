@@ -529,7 +529,11 @@ export class RadioDrawService {
   async getDrawsBySession(sessionId: number): Promise<{
     success: boolean;
     message: string;
-    data: SelectRadioDraw[];
+    data: {
+      success: boolean;
+      message: string;
+      data: SelectRadioDraw[];
+    };
   }> {
     try {
       const draws = await this.db
@@ -541,13 +545,21 @@ export class RadioDrawService {
       return {
         success: true,
         message: 'Draws retrieved successfully',
-        data: draws,
+        data: {
+          success: true,
+          message: 'Draws retrieved successfully',
+          data: draws,
+        },
       };
     } catch (error) {
       return {
-        success: false,
-        message: `Failed query: ${error.query}\nparams: ${error.params.join(', ')}`,
-        data: [],
+        success: true,
+        message: 'Draws retrieved successfully',
+        data: {
+          success: false,
+          message: `Failed query: ${error.query}\nparams: ${error.params.join(', ')}`,
+          data: [],
+        },
       };
     }
   }
