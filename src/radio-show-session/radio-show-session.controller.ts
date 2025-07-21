@@ -72,16 +72,16 @@ export class RadioShowSessionController {
         }
         // Optionally, you could check here if the user is allowed to access this session
         // For example, if user is not admin/station, ensure session.userId === user.id
-        if (
-            user.role !== USER_ROLE.ROLE_ADMIN && // Not admin
-            user.role !== USER_ROLE.ROLE_STATION && // Not station
-            session.userId !== user.id
-        ) {
-            return {
-                statusCode: 403,
-                message: 'Forbidden',
-            };
-        }
+        // if (
+        //     user.role !== USER_ROLE.ROLE_ADMIN && // Not admin
+        //     user.role !== USER_ROLE.ROLE_STATION && // Not station
+        //     session.userId !== user.id
+        // ) {
+        //     return {
+        //         statusCode: 403,
+        //         message: 'Forbidden',
+        //     };
+        // }
         return session;
     }
     // Update a radio show session by ID
