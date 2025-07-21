@@ -10,12 +10,17 @@ import {
     HttpStatus,
     HttpException,
     Version,
+    UseGuards,
 } from '@nestjs/common';
 import { SelectRadioDraw } from '../database/radio-draw.entity';
 import { RadioDrawService, ConductDrawDto, DrawResult } from './radio-draw.service';
 import { CreateRadioDrawDto } from './dto/create-radio-draw.dto';
+import { JwtGuard } from 'src/auth/guard';
+import { RolesGuard } from 'src/auth/roles/roles.guard';
+import { Roles } from 'src/auth/roles/roles.decorator';
+import { USER_ROLE } from 'src/auth/roles/roles.constant';
 
-  
+  @UseGuards(JwtGuard, RolesGuard)
   @Controller('draws')
   export class RadioDrawController {
     constructor(private readonly radioDrawService: RadioDrawService) {}
@@ -180,7 +185,11 @@ import { CreateRadioDrawDto } from './dto/create-radio-draw.dto';
     async getDrawsBySession(@Param('sessionId', ParseIntPipe) sessionId: number): Promise<{
       success: boolean;
       message: string;
-      data: SelectRadioDraw[];
+      data: {
+        success: boolean;
+        message: string;
+        data: SelectRadioDraw[];
+      };
     }> {
       try {
         const result = await this.radioDrawService.getDrawsBySession(sessionId);

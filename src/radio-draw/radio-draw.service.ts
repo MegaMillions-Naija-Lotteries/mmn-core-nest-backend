@@ -526,12 +526,30 @@ export class RadioDrawService {
   /**
    * Get all draws for a session
    */
-  async getDrawsBySession(sessionId: number): Promise<SelectRadioDraw[]> {
-    return await this.db
-      .select()
-      .from(radioDraws)
-      .where(eq(radioDraws.sessionId, sessionId))
-      .orderBy(asc(radioDraws.drawNumber));
+  async getDrawsBySession(sessionId: number): Promise<{
+    success: boolean;
+    message: string;
+    data: SelectRadioDraw[];
+  }> {
+    try {
+      const draws = await this.db
+        .select()
+        .from(radioDraws)
+        .where(eq(radioDraws.sessionId, sessionId))
+        .orderBy(asc(radioDraws.conductedAt));
+
+      return {
+        success: true,
+        message: 'Draws retrieved successfully',
+        data: draws,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `Failed query: ${error.query}\nparams: ${error.params.join(', ')}`,
+        data: [],
+      };
+    }
   }
 
   /**
