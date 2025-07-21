@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, Query, UseGuards, Version } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, Query, Res, UseGuards, Version } from '@nestjs/common';
 import { RadioTicketService } from './radio-ticket.service';
 import { JwtGuard } from 'src/auth/guard';
 import { RolesGuard } from 'src/auth/roles/roles.guard';
@@ -6,6 +6,7 @@ import { GetUser } from 'src/auth/decorator';
 import { HttpModule } from '@nestjs/axios';
 import { PaystackService } from '../paystack/paystack.service';
 import { Public } from 'src/auth/decorator/public.decorator';
+import { Response } from 'express';
 
 @UseGuards(JwtGuard, RolesGuard)
 @Controller('tickets')
@@ -75,13 +76,15 @@ export class RadioTicketController {
     async verifyRadioTicketPurchase(
         @Query('reference') reference: string,
         paymentmethod: string,
+        @Res() res: Response,
         // @Body('paymentmethod') paymentmethod: number
     ){
-        console.log(reference)
         return this.radioTicketService.verifyRadioTicketPayment(
             reference,
             'paystack'
-        )
+        ).then((result) => {
+            res.redirect(`http://localhost:3000/verify-payment?reference=${reference}`);
+        });
     }
 
 }

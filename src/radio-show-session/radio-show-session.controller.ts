@@ -14,7 +14,7 @@ export class RadioShowSessionController {
 
     @Post()
     @Version('1')
-    @Roles(USER_ROLE.ROLE_OAP, USER_ROLE.ROLE_STATION)
+    // @Roles(USER_ROLE.ROLE_OAP, USER_ROLE.ROLE_STATION)
     async create(@Body() createRadioShowSessionDto: CreateRadioShowSessionDto) {
         return this.radioShowSessionService.create(createRadioShowSessionDto);
     }
