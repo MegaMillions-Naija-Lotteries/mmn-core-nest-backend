@@ -88,7 +88,7 @@ export class RadioShowSessionController {
     // PATCH /radio-show-sessions/:id
     @Patch(':id')
     @Version('1')
-    @Roles(USER_ROLE.ROLE_ADMIN)
+    // @Roles(USER_ROLE.ROLE_ADMIN)
     async updateSession(
         @GetUser() user: any,
         @Param('id') id: string,
@@ -134,7 +134,7 @@ export class RadioShowSessionController {
     // DELETE /radio-show-sessions/:id
     @Delete(':id')
     @Version('1')
-    @Roles(USER_ROLE.ROLE_ADMIN)
+    // @Roles(USER_ROLE.ROLE_ADMIN)
     async deleteSession(
         @GetUser() user: any,
         @Param('id') id: string

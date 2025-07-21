@@ -139,9 +139,9 @@ export class RadioShowSessionService {
         }
         // Optionally, filter by userId if sessions are user-specific
         // Only restrict to userId if NOT admin or station
-        if (user.role !== USER_ROLE.ROLE_ADMIN && user.role !== USER_ROLE.ROLE_STATION) {
-            whereClauses.push(eq(schema.radioShowSessions.userId, user.id));
-        }
+        // if (user.role !== USER_ROLE.ROLE_ADMIN && user.role !== USER_ROLE.ROLE_STATION) {
+        //     whereClauses.push(eq(schema.radioShowSessions.userId, user.id));
+        // }
         
         // Pagination
         const offset = (page - 1) * limit;
