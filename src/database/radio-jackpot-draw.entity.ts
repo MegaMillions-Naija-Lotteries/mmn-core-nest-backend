@@ -13,6 +13,7 @@ import {
 import { relations } from "drizzle-orm";
 import { radioTickets } from "./radio-ticket.entity";
 import { radioStations } from "./radio-station.entity";
+import { radioShows } from "./radio-show.entity";
 
 export const radioJackpotDraws = mysqlTable(
   "radio_jackpot_draws",
@@ -59,6 +60,11 @@ export const radioJackpotDraws = mysqlTable(
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
+
+    showId: int("show_id").references(() => radioShows.id, {
+      onUpdate: "cascade",
+      onDelete: "set null",
+    }),
 
     winningTicketId: int("winning_ticket_id").references(() => radioTickets.id, {
       onUpdate: "cascade",

@@ -3,6 +3,9 @@ import { eq, and, between, sql } from 'drizzle-orm';
 import { randomInt } from 'crypto';
 import { radioJackpotDraws } from '../database/schema';
 import { CreateRadioJackpotDrawDto } from './dto/create-radio-jackpot-draw.dto';
+import { radioTickets } from '../database/radio-ticket.entity';
+import { users } from '../database/user.entity';
+import { radioShows } from '../database/radio-show.entity';
 import { MySql2Database } from 'drizzle-orm/mysql2';
 import { schema } from '../database/schema';
 import type { InferInsertModel } from 'drizzle-orm';
@@ -40,7 +43,7 @@ export class RadioJackpotDrawService {
     return this.db.select().from(radioJackpotDraws).where(eq(radioJackpotDraws.id, id)).limit(1);
   }
 
-  async conduct(id: number) {
+  async conduct(id: number, showId: number) {
     const draw = await this.details(id).then(r => r[0]);
     if (!draw) throw new Error('Draw not found');
     if (draw.status !== 'active') throw new Error('Draw not active');
@@ -60,14 +63,27 @@ export class RadioJackpotDrawService {
     const winnerIndex = randomInt(0, tickets.length);
     const winner = tickets[winnerIndex];
 
+    // Get the user details including phone number
+    const winnerDetails = await this.db
+      .select({
+        userId: radioTickets.userId,
+        ticketId: radioTickets.id,
+        phone: sql`users.phone`
+      })
+      .from(radioTickets)
+      .leftJoin(users, eq(users.id, radioTickets.userId))
+      .where(eq(radioTickets.id, winner.id))
+      .then(result => result[0]);
+
     await this.db.update(radioJackpotDraws)
       .set({
         conductedAt: new Date(),
         status: 'completed',
         winningTicketId: winner.id,
-        winnerDetails: { userId: winner.user_id, ticketId: winner.id },
+        winnerDetails: winnerDetails,
         previousWinners: sql`JSON_ARRAY_APPEND(previous_winners, '$', JSON_OBJECT('userId', ${winner.user_id}, 'ticketId', ${winner.id}))`,
         totalTickets: tickets.length,
+        showId: showId,
       })
       .where(eq(radioJackpotDraws.id, id));
 
@@ -93,6 +109,6 @@ export class RadioJackpotDrawService {
         winnerDetails: null,
       })
       .where(eq(radioJackpotDraws.id, id));
-    return this.conduct(id);
+    return this.conduct(id, draw.showId||1);
   }
 }

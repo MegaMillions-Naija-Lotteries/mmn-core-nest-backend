@@ -35,10 +35,10 @@ export class RadioJackpotDrawController {
     return this.service.details(+id);
   }
 
-  @Patch(':id/conduct')
+  @Patch(':id/conduct/:showId')
   @Version('1')
-  conduct(@Param('id') id: string) {
-    return this.service.conduct(+id);
+  conduct(@Param('id') id: string, @Param('showId') showId: number) {
+    return this.service.conduct(+id, +showId);
   }
 
   @Patch(':id/redraw')

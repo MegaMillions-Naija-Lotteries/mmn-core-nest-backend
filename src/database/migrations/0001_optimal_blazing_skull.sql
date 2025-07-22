@@ -83,6 +83,7 @@ CREATE TABLE `radio_jackpot_draws` (
 	`title` varchar(255) NOT NULL,
 	`description` text,
 	`station_id` int,
+	`show_id` int,
 	`draw_period` enum('daily','weekly','biweekly','monthly','quarterly','custom') NOT NULL,
 	`period_start` datetime NOT NULL,
 	`period_end` datetime NOT NULL,
