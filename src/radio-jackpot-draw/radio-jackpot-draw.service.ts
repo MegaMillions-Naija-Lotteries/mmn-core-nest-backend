@@ -141,9 +141,9 @@ export class RadioJackpotDrawService {
   // }
   async redraw(id: number) {
     const draw = await this.details(id).then(r => r?.[0]);
-    if (!draw || draw.status !== 'completed') {
-      throw new BadRequestException('Draw not completed');
-    }
+    // if (!draw || draw.status !== 'completed') {
+    //   throw new BadRequestException('Draw not completed');
+    // }
   
     // Fetch current draw with winner details
     interface DrawWithWinnerDetails {
@@ -159,11 +159,10 @@ export class RadioJackpotDrawService {
       .from(radioJackpotDraws)
       .where(eq(radioJackpotDraws.id, id))
       .limit(1) as DrawWithWinnerDetails[];
-  
     const winner = drawWithWinnerDetails?.winnerDetails;
-    if (!winner || !winner.userId || !winner.ticketId || !winner.phone) {
-      throw new BadRequestException('Incomplete winner details');
-    }
+    // if (!winner || !winner.userId || !winner.ticketId || !winner.phone) {
+    //   throw new BadRequestException('Incomplete winner details');
+    // }
   
     await this.db.update(radioJackpotDraws)
       .set({
@@ -171,9 +170,9 @@ export class RadioJackpotDrawService {
         conductedAt: null,
         winningTicketId: null,
         previousWinners: sql`JSON_ARRAY_APPEND(previous_winners, '$', JSON_OBJECT(
-          'phone', ${winner.phone},
-          'userId', ${winner.userId},
-          'ticketId', ${winner.ticketId}
+          'phone', ${winner?.phone},
+          'userId', ${winner?.userId},
+          'ticketId', ${winner?.ticketId}
         ))` as unknown as string,
         winnerDetails: null,
       })
