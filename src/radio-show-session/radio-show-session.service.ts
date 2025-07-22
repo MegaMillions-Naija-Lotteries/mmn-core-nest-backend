@@ -211,8 +211,15 @@ export class RadioShowSessionService {
         }
 
         const draws = await this.db
-            .select()
+            .select({
+                draw: schema.radioDraws,
+                winnerName: schema.users.name,
+                winnerEmail: schema.users.email,
+                winnerPhone: schema.users.phone,
+            })
             .from(schema.radioDraws)
+            .innerJoin(schema.radioTickets, eq(schema.radioDraws.winningTicketId, schema.radioTickets.id))
+            .innerJoin(schema.users, eq(schema.radioTickets.userId, schema.users.id))
             .where(and(
                 eq(schema.radioDraws.sessionId, id),
                 isNotNull(schema.radioDraws.winningTicketId),
@@ -241,7 +248,14 @@ export class RadioShowSessionService {
 
         return {
             session,
-            draws,
+            draws: draws.map(draw => ({
+                ...draw.draw,
+                winner: {
+                    name: draw.winnerName,
+                    email: draw.winnerEmail,
+                    phone: draw.winnerPhone
+                }
+            })),
             show: show[0],
             stats: stats[0],
             userId: session.userId,
