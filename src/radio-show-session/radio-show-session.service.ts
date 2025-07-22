@@ -150,8 +150,25 @@ export class RadioShowSessionService {
 
         // Query
         const query = this.db
-            .select()
+            .select({
+                session: schema.radioShowSessions,
+                show: schema.radioShows,
+                station: schema.radioStations,
+                totalDraws: sql<number>`(
+                    SELECT COUNT(*)
+                    FROM ${schema.radioDraws}
+                    WHERE ${schema.radioDraws}.sessionId = ${schema.radioShowSessions}.id
+                )`,
+                totalWinners: sql<number>`(
+                    SELECT COUNT(*)
+                    FROM ${schema.radioDraws}
+                    WHERE ${schema.radioDraws}.sessionId = ${schema.radioShowSessions}.id
+                    AND ${schema.radioDraws}.winner IS NOT NULL
+                )`,
+            })
             .from(schema.radioShowSessions)
+            .innerJoin(schema.radioShows, eq(schema.radioShows.id, schema.radioShowSessions.showId))
+            .innerJoin(schema.radioStations, eq(schema.radioStations.id, schema.radioShowSessions.stationId))
             .limit(limit)
             .offset(offset);
 
@@ -168,7 +185,13 @@ export class RadioShowSessionService {
             .where(whereClauses.length > 0 ? and(...whereClauses) : undefined);
 
         return {
-            data: results,
+            data: results.map((session) => ({
+                ...session.session,
+                show: session.show,
+                station: session.station,
+                totalDraws: session.totalDraws,
+                totalWinners: session.totalWinners,
+            })),
             total: count, // Replace with actual count if needed
             page,
             limit,
