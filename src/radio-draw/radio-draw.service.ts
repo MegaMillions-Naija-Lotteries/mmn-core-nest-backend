@@ -422,6 +422,7 @@ export class RadioDrawService {
         updatedAt: radioTickets.updatedAt,
         userName: users.name || '',
         userEmail: users.email || '',
+        userPhone: users.phone || '',
       })
       .from(radioTickets)
       .leftJoin(users, eq(radioTickets.userId, users.id))
@@ -455,7 +456,8 @@ export class RadioDrawService {
       .select({
         ticket: radioTickets,
         userName: users.name,
-        userEmail: users.email
+        userEmail: users.email,
+        userPhone: users.phone
       })
       .from(radioTickets)
       .innerJoin(users, eq(radioTickets.userId, users.id))
@@ -464,13 +466,14 @@ export class RadioDrawService {
     // Create a weighted array based on ticket quantity
     const weightedTickets: ExtendedRadioTicket[] = [];
     
-    for (const { ticket, userName, userEmail } of ticketsWithUsers) {
+    for (const { ticket, userName, userEmail, userPhone } of ticketsWithUsers) {
       const availableQuantity = ticket.quantity - ticket.usedCount;
       for (let i = 0; i < availableQuantity; i++) {
         weightedTickets.push({
           ...ticket,
           userName: userName || '',
-          userEmail: userEmail || ''
+          userEmail: userEmail || '',
+          userPhone: userPhone || '',
         });
       }
     }
@@ -498,6 +501,7 @@ export class RadioDrawService {
       userId: winningTicket.userId,
       userName: winningTicket.userName,
       userEmail: winningTicket.userEmail,
+      userPhone: winningTicket.userPhone,
       selectedAt: new Date(),
       entryNumber: randomIndex + 1,
       totalEntries: weightedTickets.length,
