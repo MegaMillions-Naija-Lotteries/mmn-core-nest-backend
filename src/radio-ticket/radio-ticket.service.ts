@@ -353,12 +353,12 @@ export class RadioTicketService {
             let verification;
             console.log(paymentMethod)
 
-            if (paymentMethod === 'paystack') {
+            // if (paymentMethod === 'paystack') {
                 console.log(paymentMethod)
                 verification = await this.paystackService.verifyTransaction(reference);
                 console.log(verification)
 
-            }
+            // }
     
             if (!verification || verification.status !== true) {
                 return {
