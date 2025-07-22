@@ -157,13 +157,13 @@ export class RadioShowSessionService {
                 totalDraws: sql<number>`(
                     SELECT COUNT(*)
                     FROM ${schema.radioDraws}
-                    WHERE ${schema.radioDraws}.sessionId = ${schema.radioShowSessions}.id
+                    WHERE ${schema.radioDraws.sessionId} = ${schema.radioShowSessions.id}
                 )`,
                 totalWinners: sql<number>`(
                     SELECT COUNT(*)
                     FROM ${schema.radioDraws}
-                    WHERE ${schema.radioDraws}.sessionId = ${schema.radioShowSessions}.id
-                    AND ${schema.radioDraws}.winner IS NOT NULL
+                    WHERE ${schema.radioDraws.sessionId} = ${schema.radioShowSessions.id}
+                    AND ${schema.radioDraws.winningTicketId} IS NOT NULL
                 )`,
             })
             .from(schema.radioShowSessions)
