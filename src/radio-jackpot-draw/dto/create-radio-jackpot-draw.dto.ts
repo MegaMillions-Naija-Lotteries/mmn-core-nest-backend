@@ -5,7 +5,11 @@ export class CreateRadioJackpotDrawDto {
   @IsString() title: string;
   @IsOptional() @IsString() description?: string;
   @IsNumber() stationId?: number;
-  @IsNumber() showId?: number;
+
+  @IsOptional()
+  @IsNumber() 
+  showId?: number;
+
   drawPeriod: typeof radioJackpotDraws.$inferSelect['drawPeriod'];
   @IsDateString() periodStart: Date;
   @IsDateString() periodEnd: Date;
