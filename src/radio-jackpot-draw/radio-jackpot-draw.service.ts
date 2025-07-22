@@ -51,11 +51,12 @@ export class RadioJackpotDrawService {
   }
 
   async conduct(id: number, showId: number) {
-    const draw = await this.details(id).then(r => r[0]);
-    if (!draw) throw new BadRequestException('Draw not found');
-    if (draw.status !== 'active') throw new BadRequestException('Draw not active');
+    try {
+      const draw = await this.details(id).then(r => r[0]);
+      if (!draw) throw new BadRequestException('Draw not found');
+      if (draw.status !== 'active') throw new BadRequestException('Draw not active');
 
-    // eligible tickets
+      // eligible tickets
     const eligible = await this.db.execute(sql`
       SELECT id, user_id FROM radio_tickets
       WHERE createdAt BETWEEN ${draw.periodStart} AND ${draw.periodEnd}
@@ -107,6 +108,9 @@ export class RadioJackpotDrawService {
       .where(eq(radioJackpotDraws.id, id));
 
     return this.details(id).then(r => r[0]);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   async createAndConduct(dto: CreateRadioJackpotDrawDto) {
