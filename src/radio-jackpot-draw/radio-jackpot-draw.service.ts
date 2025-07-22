@@ -32,6 +32,7 @@ export class RadioJackpotDrawService {
       prizeAmount: String(dto.prizeAmount),
     };
     const [row] = await this.db.insert(radioJackpotDraws).values(insertData).$returningId();
+    await this.db.update(radioJackpotDraws).set({ status: 'active' }).where(eq(radioJackpotDraws.id, row.id));
     const draw = await this.details(row.id).then(r => r[0]);
     return {
       title: draw.title,
