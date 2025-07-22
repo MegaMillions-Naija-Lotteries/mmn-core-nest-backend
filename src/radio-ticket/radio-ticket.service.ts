@@ -79,7 +79,7 @@ export class RadioTicketService {
             email: user.email,
             amount: amount,
             reference,
-            callback_url: `${process.env.API_HOST}/radio/tickets/verify-payment`,
+            callback_url: `${process.env.FRONTEND_HOST}/radio/verify-payment`,
             // description: `Radio ticket purchase - Station: ${stationId}, Draw: ${drawId || "None"}, Quantity: ${quantity}`
         })
 
@@ -293,7 +293,7 @@ export class RadioTicketService {
                 email: user.email,
                 amount: amount,
                 reference,
-                callback_url: `${process.env.API_HOST}/radio/tickets/verify-payment`,
+                callback_url: `${process.env.FRONTEND_HOST}/radio/verify-payment`,
                 description: `Radio ticket purchase - Station: ${stationId}, Draw: ${drawId || 'None'}, Quantity: ${quantity}`,
             };
 
@@ -302,7 +302,7 @@ export class RadioTicketService {
                 email: phone+'@mmnaija.com',
                 amount: amount,
                 reference,
-                callback_url: `${process.env.API_HOST}/radio/tickets/verify-payment`,
+                callback_url: `${process.env.FRONTEND_HOST}/radio/verify-payment`,
                 // description: `Radio ticket purchase - Station: ${stationId}, Draw: ${drawId || "None"}, Quantity: ${quantity}`
             });
 
