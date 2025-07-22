@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { eq, and, between, sql } from 'drizzle-orm';
 import { randomInt } from 'crypto';
 import { radioJackpotDraws } from '../database/schema';
@@ -9,6 +9,12 @@ import { radioShows } from '../database/radio-show.entity';
 import { MySql2Database } from 'drizzle-orm/mysql2';
 import { schema } from '../database/schema';
 import type { InferInsertModel } from 'drizzle-orm';
+
+interface WinnerDetails {
+  userId: number;
+  ticketId: number;
+  phone: string;
+}
 
 @Injectable()
 export class RadioJackpotDrawService {
@@ -45,35 +51,47 @@ export class RadioJackpotDrawService {
 
   async conduct(id: number, showId: number) {
     const draw = await this.details(id).then(r => r[0]);
-    if (!draw) throw new Error('Draw not found');
-    if (draw.status !== 'active') throw new Error('Draw not active');
+    if (!draw) throw new BadRequestException('Draw not found');
+    if (draw.status !== 'active') throw new BadRequestException('Draw not active');
 
     // eligible tickets
     const eligible = await this.db.execute(sql`
-      SELECT id, user_id FROM tickets
-      WHERE created_at BETWEEN ${draw.periodStart} AND ${draw.periodEnd}
+      SELECT id, user_id FROM radio_tickets
+      WHERE createdAt BETWEEN ${draw.periodStart} AND ${draw.periodEnd}
     `);
-
     const tickets = eligible as unknown as { id: number; user_id: number }[];
+
     if (tickets.length === 0) {
       await this.db.update(radioJackpotDraws).set({ status: 'completed', conductedAt: new Date() }).where(eq(radioJackpotDraws.id, id));
       return { ...draw, winningTicketId: null };
     }
 
     const winnerIndex = randomInt(0, tickets.length);
-    const winner = tickets[winnerIndex];
+    const winner = tickets[0][winnerIndex];
 
+    console.log(tickets[0][winnerIndex]);
     // Get the user details including phone number
     const winnerDetails = await this.db
       .select({
         userId: radioTickets.userId,
         ticketId: radioTickets.id,
-        phone: sql`users.phone`
+        phone: users.phone
       })
       .from(radioTickets)
       .leftJoin(users, eq(users.id, radioTickets.userId))
       .where(eq(radioTickets.id, winner.id))
-      .then(result => result[0]);
+      .then(result => {
+        if (!result[0]) {
+          throw new BadRequestException(`No ticket found with id ${winner.id}`);
+        }
+        return result[0];
+      });
+
+    // Extract the winner's user ID from the winnerDetails
+    const winnerUserId = winnerDetails.userId;
+    if (!winnerUserId) {
+      throw new BadRequestException(`Winner details are missing userId`);
+    }
 
     await this.db.update(radioJackpotDraws)
       .set({
@@ -81,7 +99,7 @@ export class RadioJackpotDrawService {
         status: 'completed',
         winningTicketId: winner.id,
         winnerDetails: winnerDetails,
-        previousWinners: sql`JSON_ARRAY_APPEND(previous_winners, '$', JSON_OBJECT('userId', ${winner.user_id}, 'ticketId', ${winner.id}))`,
+        previousWinners: sql`JSON_ARRAY_APPEND(previous_winners, '$', JSON_OBJECT('userId', ${winnerUserId}, 'ticketId', ${winner.id}))` as unknown as string, // Cast to string to resolve type issues
         totalTickets: tickets.length,
         showId: showId,
       })
@@ -96,19 +114,71 @@ export class RadioJackpotDrawService {
     // return this.conduct(draw.id);
   }
 
+  // async redraw(id: number) {
+  //   const draw = await this.details(id).then(r => r[0]);
+  //   if (!draw || draw.status !== 'completed') throw new BadRequestException('Draw not completed');
+  //   // reset winner
+  //   const [drawWithWinnerDetails] = await this.db.select()
+  //   .from(radioJackpotDraws)
+  //   .where(eq(radioJackpotDraws.id, id))
+  //   .limit(1);
+
+  //   if (!drawWithWinnerDetails?.winnerDetails) {
+  //     throw new BadRequestException('Winner details not found');
+  //   }
+
+  //   await this.db.update(radioJackpotDraws)
+  //     .set({
+  //       status: 'active',
+  //       conductedAt: null,
+  //       winningTicketId: null,        
+  //       previousWinners: sql`JSON_ARRAY_APPEND(previous_winners, '$', JSON_OBJECT('phone', ${drawWithWinnerDetails.winnerDetails.phone}, 'userId', ${drawWithWinnerDetails.winnerDetails.userId}, 'ticketId', ${drawWithWinnerDetails.winnerDetails.ticketId}))` as unknown as string,
+  //       winnerDetails: null,
+  //     })
+  //     .where(eq(radioJackpotDraws.id, id));
+  //   return this.conduct(id, draw.showId||1);
+  // }
   async redraw(id: number) {
-    const draw = await this.details(id).then(r => r[0]);
-    if (!draw || draw.status !== 'completed') throw new Error('Draw not completed');
-    // reset winner
+    const draw = await this.details(id).then(r => r?.[0]);
+    if (!draw || draw.status !== 'completed') {
+      throw new BadRequestException('Draw not completed');
+    }
+  
+    // Fetch current draw with winner details
+    interface DrawWithWinnerDetails {
+      winnerDetails: {
+        userId: number;
+        ticketId: number;
+        phone: string;
+      } | null;
+    }
+    
+    const [drawWithWinnerDetails] = await this.db
+      .select()
+      .from(radioJackpotDraws)
+      .where(eq(radioJackpotDraws.id, id))
+      .limit(1) as DrawWithWinnerDetails[];
+  
+    const winner = drawWithWinnerDetails?.winnerDetails;
+    if (!winner || !winner.userId || !winner.ticketId || !winner.phone) {
+      throw new BadRequestException('Incomplete winner details');
+    }
+  
     await this.db.update(radioJackpotDraws)
       .set({
         status: 'active',
         conductedAt: null,
         winningTicketId: null,
-        previousWinners: sql`JSON_ARRAY_APPEND(previous_winners, '$', ${draw.winnerDetails})`,
+        previousWinners: sql`JSON_ARRAY_APPEND(previous_winners, '$', JSON_OBJECT(
+          'phone', ${winner.phone},
+          'userId', ${winner.userId},
+          'ticketId', ${winner.ticketId}
+        ))` as unknown as string,
         winnerDetails: null,
       })
       .where(eq(radioJackpotDraws.id, id));
-    return this.conduct(id, draw.showId||1);
+  
+    return this.conduct(id, draw.showId ?? 1);
   }
+  
 }
