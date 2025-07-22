@@ -351,8 +351,13 @@ export class RadioTicketService {
             // In a real implementation, verify with payment gateway and update transaction status
             // verify payment with paystack
             let verification;
+            console.log(paymentMethod)
+
             if (paymentMethod === 'paystack') {
+                console.log(paymentMethod)
                 verification = await this.paystackService.verifyTransaction(reference);
+                console.log(verification)
+
             }
     
             if (!verification || verification.status !== true) {

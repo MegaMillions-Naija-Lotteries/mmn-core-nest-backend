@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
-import { and, asc, eq, inArray, Placeholder, sql, SQLWrapper } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, Placeholder, sql, SQLWrapper } from 'drizzle-orm';
 import { MySql2Database } from 'drizzle-orm/mysql2';
 import { USER_ROLE } from 'src/auth/roles/roles.constant';
 import { schema } from 'src/database/schema';
@@ -213,7 +213,10 @@ export class RadioShowSessionService {
         const draws = await this.db
             .select()
             .from(schema.radioDraws)
-            .where(eq(schema.radioDraws.sessionId, id))
+            .where(and(
+                eq(schema.radioDraws.sessionId, id),
+                isNotNull(schema.radioDraws.winningTicketId),
+            ))
             .orderBy(asc(schema.radioDraws.drawNumber));
 
         const show = await this.db
