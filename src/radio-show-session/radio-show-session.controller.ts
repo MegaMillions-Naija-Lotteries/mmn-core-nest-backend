@@ -203,16 +203,16 @@ export class RadioShowSessionController {
             };
         }
         // Only allow end if user is admin, station, or the session owner
-        if (
-            user.role !== USER_ROLE.ROLE_ADMIN &&
-            user.role !== USER_ROLE.ROLE_STATION &&
-            session.userId !== user.id
-        ) {
-            return {
-                statusCode: 403,
-                message: 'Forbidden',
-            };
-        }
+        // if (
+        //     user.role !== USER_ROLE.ROLE_ADMIN &&
+        //     user.role !== USER_ROLE.ROLE_STATION &&
+        //     session.userId !== user.id
+        // ) {
+        //     return {
+        //         statusCode: 403,
+        //         message: 'Forbidden',
+        //     };
+        // }
         // Only allow ending if session is currently active
         if (session.status !== 'active') {
             return {
