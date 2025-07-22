@@ -350,7 +350,10 @@ export class RadioTicketService {
         async verifyRadioTicketPayment(reference: string, paymentMethod: string): Promise<any> {
             // In a real implementation, verify with payment gateway and update transaction status
             // verify payment with paystack
-            const verification = await this.paystackService.verifyTransaction(reference);
+            let verification;
+            if (paymentMethod === 'paystack') {
+                verification = await this.paystackService.verifyTransaction(reference);
+            }
     
             if (!verification || verification.status !== true) {
                 return {

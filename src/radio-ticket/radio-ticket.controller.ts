@@ -71,7 +71,7 @@ export class RadioTicketController {
     }
 
     @Public()
-    @Get('verify-payment')
+    @Get('get-verify-payment')
     @Version('1')
     async verifyRadioTicketPurchase(
         @Query('reference') reference: string,
@@ -85,6 +85,19 @@ export class RadioTicketController {
         ).then((result) => {
             res.redirect(`https://8aa0c37fbc76.ngrok-free.app/verify-payment?reference=${reference}`);
         });
+    }
+
+    @Public()
+    @Post('verify-payment')
+    @Version('1')
+    async verifyRadioTicketPurchasePost(
+        @Body('reference') reference: string,
+        @Body('paymentmethod') paymentmethod: string,
+    ){
+        return this.radioTicketService.verifyRadioTicketPayment(
+            reference,
+            paymentmethod
+        );
     }
 
 }
