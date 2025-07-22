@@ -89,6 +89,7 @@ export class RadioJackpotDrawService {
         status: 'active',
         conductedAt: null,
         winningTicketId: null,
+        previousWinners: sql`JSON_ARRAY_APPEND(previous_winners, '$', ${draw.winnerDetails})`,
         winnerDetails: null,
       })
       .where(eq(radioJackpotDraws.id, id));
