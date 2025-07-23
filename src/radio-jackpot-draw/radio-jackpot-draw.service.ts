@@ -32,9 +32,11 @@ export class RadioJackpotDrawService {
       prizeAmount: String(dto.prizeAmount),
     };
     const [row] = await this.db.insert(radioJackpotDraws).values(insertData).$returningId();
-    await this.db.update(radioJackpotDraws).set({ status: 'active' }).where(eq(radioJackpotDraws.id, row.id));
+    const updateStatus = await this.db.update(radioJackpotDraws).set({ status: 'active' }).where(eq(radioJackpotDraws.id, row.id));
+    console.log(updateStatus)
     const draw = await this.details(row.id).then(r => r[0]);
     return {
+      id: draw.id,
       title: draw.title,
       station: draw.stationId,
       date: draw.periodStart.toLocaleDateString(),
@@ -57,21 +59,21 @@ export class RadioJackpotDrawService {
       if (draw.status !== 'active') throw new BadRequestException('Draw not active');
 
       // eligible tickets
-    const eligible = await this.db.execute(sql`
-      SELECT id, user_id FROM radio_tickets
-      WHERE createdAt BETWEEN ${draw.periodStart} AND ${draw.periodEnd}
-    `);
-    const tickets = eligible as unknown as { id: number; user_id: number }[];
+    const eligible = await this.db
+      .select({ id: radioTickets.id, user_id: radioTickets.userId })
+      .from(radioTickets)
+      .where(between(radioTickets.createdAt, draw.periodStart, draw.periodEnd));
 
+    const tickets = eligible;
     if (tickets.length === 0) {
       await this.db.update(radioJackpotDraws).set({ status: 'completed', conductedAt: new Date() }).where(eq(radioJackpotDraws.id, id));
       return { ...draw, winningTicketId: null };
     }
 
     const winnerIndex = randomInt(0, tickets.length);
-    const winner = tickets[0][winnerIndex];
+    const winner = tickets[winnerIndex];
 
-    console.log(tickets[0][winnerIndex]);
+
     // Get the user details including phone number
     const winnerDetails = await this.db
       .select({
@@ -143,11 +145,53 @@ export class RadioJackpotDrawService {
   //     .where(eq(radioJackpotDraws.id, id));
   //   return this.conduct(id, draw.showId||1);
   // }
+  // async redraw(id: number) {
+  //   const draw = await this.details(id).then(r => r?.[0]);
+  //   // if (!draw || draw.status !== 'completed') {
+  //   //   throw new BadRequestException('Draw not completed');
+  //   // }
+  
+  //   // Fetch current draw with winner details
+  //   interface DrawWithWinnerDetails {
+  //     winnerDetails: {
+  //       userId: number;
+  //       ticketId: number;
+  //       phone: string;
+  //     } | null;
+  //   }
+    
+  //   const [drawWithWinnerDetails] = await this.db
+  //     .select()
+  //     .from(radioJackpotDraws)
+  //     .where(eq(radioJackpotDraws.id, id))
+  //     .limit(1) as DrawWithWinnerDetails[];
+  //   const winner = drawWithWinnerDetails?.winnerDetails;
+  //   // if (!winner || !winner.userId || !winner.ticketId || !winner.phone) {
+  //   //   throw new BadRequestException('Incomplete winner details');
+  //   // }
+  
+  //   await this.db.update(radioJackpotDraws)
+  //     .set({
+  //       status: 'active',
+  //       conductedAt: null,
+  //       winningTicketId: null,
+  //       previousWinners: sql`JSON_ARRAY_APPEND(previous_winners, '$', JSON_OBJECT(
+  //         'phone', ${winner?.phone},
+  //         'userId', ${winner?.userId},
+  //         'ticketId', ${winner?.ticketId}
+  //       ))` as unknown as string,
+  //       winnerDetails: null,
+  //     })
+  //     .where(eq(radioJackpotDraws.id, id));
+  
+  //   return this.conduct(id, draw.showId ?? 1);
+  // }
   async redraw(id: number) {
     const draw = await this.details(id).then(r => r?.[0]);
-    // if (!draw || draw.status !== 'completed') {
-    //   throw new BadRequestException('Draw not completed');
-    // }
+    
+    if (!draw || draw.status !== 'completed') {
+      throw new BadRequestException('Draw not completed');
+    }
   
     // Fetch current draw with winner details
     interface DrawWithWinnerDetails {
@@ -156,28 +200,49 @@ export class RadioJackpotDrawService {
         ticketId: number;
         phone: string;
       } | null;
+      previousWinners: any[] | null;
     }
-    
+  
     const [drawWithWinnerDetails] = await this.db
       .select()
       .from(radioJackpotDraws)
       .where(eq(radioJackpotDraws.id, id))
       .limit(1) as DrawWithWinnerDetails[];
-    const winner = drawWithWinnerDetails?.winnerDetails;
-    // if (!winner || !winner.userId || !winner.ticketId || !winner.phone) {
-    //   throw new BadRequestException('Incomplete winner details');
-    // }
+  
+    if (!drawWithWinnerDetails) {
+      throw new BadRequestException('Draw not found');
+    }
+  
+    const winner = drawWithWinnerDetails.winnerDetails;
+    
+    if (!winner || !winner.userId || !winner.ticketId || !winner.phone) {
+      throw new BadRequestException('Incomplete winner details');
+    }
+  
+    // Handle previousWinners array properly
+    let previousWinnersUpdate;
+    if (drawWithWinnerDetails.previousWinners === null) {
+      // If previousWinners is null, create a new JSON array with the winner
+      previousWinnersUpdate = sql`JSON_ARRAY(JSON_OBJECT(
+        'phone', ${winner.phone},
+        'userId', ${winner.userId},
+        'ticketId', ${winner.ticketId}
+      ))`;
+    } else {
+      // If previousWinners exists, append to it
+      previousWinnersUpdate = sql`JSON_ARRAY_APPEND(previous_winners, '$', JSON_OBJECT(
+        'phone', ${winner.phone},
+        'userId', ${winner.userId},
+        'ticketId', ${winner.ticketId}
+      ))`;
+    }
   
     await this.db.update(radioJackpotDraws)
       .set({
         status: 'active',
         conductedAt: null,
         winningTicketId: null,
-        previousWinners: sql`JSON_ARRAY_APPEND(previous_winners, '$', JSON_OBJECT(
-          'phone', ${winner?.phone},
-          'userId', ${winner?.userId},
-          'ticketId', ${winner?.ticketId}
-        ))` as unknown as string,
+        previousWinners: previousWinnersUpdate,
         winnerDetails: null,
       })
       .where(eq(radioJackpotDraws.id, id));
