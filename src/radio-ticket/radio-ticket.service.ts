@@ -75,6 +75,7 @@ export class RadioTicketService {
         // Generate a unique reference (use timestamp + userId for demo)
         const reference = `RAD_TCKT_${user.id}_${Date.now()}`;
 
+        console.log(process.env.FRONTEND_HOST)
         const payment = await this.paystackService.initializeTransaction({
             email: user.email,
             amount: amount,
