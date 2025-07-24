@@ -82,6 +82,8 @@ export class RadioShowService {
         }
         if (stationId) {
             whereClauses.push(eq(schema.radioShows.stationId, stationId));
+        }else{
+            whereClauses.push(eq(schema.radioShows.stationId, 0))
         }
         if (airTime) {
             whereClauses.push(eq(schema.radioShows.airTime, airTime));
