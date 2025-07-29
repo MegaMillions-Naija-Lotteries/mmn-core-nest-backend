@@ -300,7 +300,7 @@ export class RadioTicketService {
 
             // Initialize payment based on selected method
             let paymentResult = await this.paystackService.initializeTransaction({
-                email: phone+'@mmnaija.com',
+                email: phone+'@mega9ja.com',
                 amount: amount,
                 reference,
                 callback_url: `${process.env.FRONTEND_HOST}/radio/verify-payment`,
