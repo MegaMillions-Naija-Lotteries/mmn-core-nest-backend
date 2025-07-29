@@ -19,7 +19,14 @@ async function bootstrap() {
   });
   app.enableCors(
     {
-      origin: ['*','http://localhost:4200', 'http://localhost:3000', 'http://127.0.0.1:3000', 'https://mmnraffle.com'],
+      origin: [
+        '*',
+        'http://localhost:4200',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000', 
+        'https://mmnraffle.com',
+        'https://dev.megamillionsnaija.com'
+      ],
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
       credentials: true,
     }
