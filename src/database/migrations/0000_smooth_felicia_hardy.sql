@@ -9,7 +9,7 @@ CREATE TABLE `radio_stations` (
 	CONSTRAINT `radio_stations_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
-CREATE TABLE `User` (
+CREATE TABLE `user` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`authKey` varchar(255),
 	`manager_id` int,

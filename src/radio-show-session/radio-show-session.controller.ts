@@ -52,7 +52,7 @@ export class RadioShowSessionController {
 
     @Get(':id')
     @Version('1')
-    @Roles(USER_ROLE.ROLE_OAP)
+    @Roles(USER_ROLE.ROLE_OAP, USER_ROLE.ROLE_STATION, USER_ROLE.ROLE_ADMIN)
     async getSessionById(
         @GetUser() user: any,
         @Param('id') id: string
@@ -89,7 +89,7 @@ export class RadioShowSessionController {
     // PATCH /radio-show-sessions/:id
     @Patch(':id')
     @Version('1')
-    // @Roles(USER_ROLE.ROLE_ADMIN)
+    @Roles(USER_ROLE.ROLE_ADMIN)
     async updateSession(
         @GetUser() user: any,
         @Param('id') id: string,
