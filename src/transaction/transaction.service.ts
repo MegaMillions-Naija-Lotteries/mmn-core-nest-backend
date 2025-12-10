@@ -158,20 +158,41 @@ export class TransactionService {
         const results = await query;
 
         // Parse descriptions and add to payload
-        const resultsWithParsedData = results.map(transaction => {
+        const resultsWithParsedData = await Promise.all(results.map(async transaction => {
             try {
                 const parsed = this.parseTransactionDescription(transaction.description ?? '');
+
+                // Fetch station name
+                const [station] = await this.db
+                    .select()
+                    .from(schema.radioStations)
+                    .where(eq(schema.radioStations.id, parsed.stationId))
+                    .limit(1);
+
+                // Fetch user phone and country code
+                const [user] = await this.db
+                    .select({
+                        phone: schema.users.phone,
+                        countryCode: schema.users.countryCode
+                    })
+                    .from(schema.users)
+                    .where(eq(schema.users.id, transaction.idUser ?? 0))
+                    .limit(1);
+                const userPhoneCountryCode = user?.countryCode ?? '';
+                const userPhone = user?.phone ?? '';
                 return {
                     ...transaction,
                     stationId: parsed.stationId,
                     drawId: parsed.drawId,
-                    quantity: parsed.quantity
+                    quantity: parsed.quantity,
+                    stationName: station?.name ?? null,
+                    phone: userPhoneCountryCode + userPhone,
                 };
             } catch (error) {
                 console.log(error.message);
                 return transaction;
             }
-        });
+        }));
 
         return resultsWithParsedData;
     }
@@ -339,25 +360,51 @@ export class TransactionService {
             .limit(limit)
             .offset(offset);
 
-        // Parse descriptions
-        const transactionsWithParsedData = transactions.map(transaction => {
+        // Parse descriptions and fetch related data
+        const transactionsWithParsedData = await Promise.all(transactions.map(async transaction => {
             try {
                 const parsed = this.parseTransactionDescription(transaction.description ?? '');
+
+                // Fetch station name
+                const [station] = await this.db
+                    .select()
+                    .from(schema.radioStations)
+                    .where(eq(schema.radioStations.id, parsed.stationId))
+                    .limit(1);
+
+                // Fetch user phone and country code
+                const [user] = await this.db
+                    .select({
+                        phone: schema.users.phone,
+                        countryCode: schema.users.countryCode
+                    })
+                    .from(schema.users)
+                    .where(eq(schema.users.id, transaction.idUser ?? 0))
+                    .limit(1);
+
+                const userPhoneCountryCode = user?.countryCode ?? '';
+                const userPhone = user?.phone ?? '';
+
                 return {
                     ...transaction,
                     stationId: parsed.stationId,
                     drawId: parsed.drawId,
-                    quantity: parsed.quantity
+                    quantity: parsed.quantity,
+                    stationName: station?.name ?? null,
+                    phone: userPhoneCountryCode + userPhone,
                 };
             } catch (error) {
+                console.log(error.message);
                 return {
                     ...transaction,
                     stationId: 0,
                     drawId: null,
-                    quantity: 0
+                    quantity: 0,
+                    stationName: null,
+                    phone: ''
                 };
             }
-        });
+        }));
 
         // If specific station requested, fetch station info and group
         if (stationId) {
@@ -373,27 +420,7 @@ export class TransactionService {
             };
         }
 
-        // Fetch all unique stations in one query (avoids N+1)
-        const uniqueStationIds = [...new Set(
-            transactionsWithParsedData
-                .map(t => t.stationId)
-                .filter(id => id > 0)
-        )];
-
-        const stations = await this.db
-            .select()
-            .from(schema.radioStations)
-            .where(sql`${schema.radioStations.id} IN (${uniqueStationIds.join(',')})`);
-
-        const stationMap = new Map(stations.map(s => [s.id, s]));
-
-        // Attach station data to transactions
-        const transactionsWithStations = transactionsWithParsedData.map(transaction => ({
-            ...transaction,
-            station: stationMap.get(transaction.stationId) || null
-        }));
-
-        return transactionsWithStations;
+        return transactionsWithParsedData;
     }
 
     /**const { stationId, drawId, quantity } = this.parseTransactionDescription(description);
