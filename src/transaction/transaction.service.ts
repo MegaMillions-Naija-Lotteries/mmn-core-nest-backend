@@ -5,7 +5,7 @@ import { schema } from 'src/database/schema';
 
 @Injectable()
 export class TransactionService {
-    constructor(@Inject('DATABASE') private db: MySql2Database<typeof schema>) {}
+    constructor(@Inject('DATABASE') private db: MySql2Database<typeof schema>) { }
     async getAllRadioTransactions(filters: {
         stationId?: number;
         drawId?: number;
@@ -61,20 +61,37 @@ export class TransactionService {
         }
         let offset = 0;
         let limit = Number(filters.limit) ?? 10; // Default limit
-        
-        if(filters.page){
+
+        if (filters.page) {
             offset = (filters.page - 1) * limit;
         }
-        
+
         const query = this.db
             .select()
             .from(schema.transactions)
             .where(and(...whereClauses))
             .limit(limit)
             .offset(offset);
-        
+
         const results = await query;
-        return results;
+
+        // Parse descriptions and add to payload
+        const resultsWithParsedData = results.map(transaction => {
+            try {
+                const parsed = this.parseTransactionDescription(transaction.description ?? '');
+                return {
+                    ...transaction,
+                    stationId: parsed.stationId,
+                    drawId: parsed.drawId,
+                    quantity: parsed.quantity
+                };
+            } catch (error) {
+                // If parsing fails, return transaction without parsed data
+                return transaction;
+            }
+        });
+
+        return resultsWithParsedData;
     }
     async getTransactionByStation(stationId?: number, filter?: {
         drawId?: number;
@@ -126,9 +143,25 @@ export class TransactionService {
 
             const transactions = await this.searchRadioTicketTransactions(stationId);
 
+            // Parse descriptions and add to payload
+            const transactionsWithParsedData = transactions.map(transaction => {
+                try {
+                    const parsed = this.parseTransactionDescription(transaction.description ?? '');
+                    return {
+                        ...transaction,
+                        stationId: parsed.stationId,
+                        drawId: parsed.drawId,
+                        quantity: parsed.quantity
+                    };
+                } catch (error) {
+                    // If parsing fails, return transaction without parsed data
+                    return transaction;
+                }
+            });
+
             return {
                 ...station,
-                transactions
+                transactions: transactionsWithParsedData
             };
         }
 
@@ -136,14 +169,25 @@ export class TransactionService {
 
         const transactionsWithStations = await Promise.all(
             transactions.map(async transaction => {
+                let parsed;
+                try {
+                    parsed = this.parseTransactionDescription(transaction.description ?? '');
+                } catch (error) {
+                    // If parsing fails, use default values
+                    parsed = { stationId: 0, drawId: null, quantity: 0 };
+                }
+
                 const [station] = await this.db
                     .select()
                     .from(schema.radioStations)
-                    .where(eq(schema.radioStations.id, this.parseTransactionDescription(transaction.description ?? '').stationId ? Number(this.parseTransactionDescription(transaction.description ?? '').stationId) : 0))
+                    .where(eq(schema.radioStations.id, parsed.stationId || 0))
                     .limit(1);
 
                 return {
                     ...transaction,
+                    stationId: parsed.stationId,
+                    drawId: parsed.drawId,
+                    quantity: parsed.quantity,
                     station
                 };
             })
@@ -193,7 +237,7 @@ export class TransactionService {
         quantity?: number
     ) {
         // Build the pattern based on provided filters
-        let pattern = 'Radio ticket purchase - Station: '; 
+        let pattern = 'Radio ticket purchase - Station: ';
         if (stationId !== undefined) {
             pattern += stationId;
         }
