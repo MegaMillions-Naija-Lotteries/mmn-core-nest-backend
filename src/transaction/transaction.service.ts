@@ -6,6 +6,94 @@ import { schema } from 'src/database/schema';
 @Injectable()
 export class TransactionService {
     constructor(@Inject('DATABASE') private db: MySql2Database<typeof schema>) { }
+    // async getAllRadioTransactions(filters: {
+    //     stationId?: number;
+    //     drawId?: number;
+    //     quantity?: number;
+    //     page?: number;
+    //     limit?: number;
+    //     startDate?: string;
+    //     endDate?: string;
+    // } = {}) {
+    //     const whereClauses: any[] = [];
+    //     whereClauses.push(eq(schema.transactions.type, 'raffle'));
+    //     if (filters.stationId) {
+    //         whereClauses.push(
+    //             eq(
+    //                 sql`CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(${schema.transactions.description}, 'Station: ', -1), ',', 1) AS UNSIGNED)`,
+    //                 filters.stationId,
+    //             ),
+    //         );
+    //     }
+
+    //     if (filters.drawId) {
+    //         whereClauses.push(
+    //             eq(
+    //                 sql`CAST(NULLIF(SUBSTRING_INDEX(SUBSTRING_INDEX(${schema.transactions.description}, 'Draw: ', -1), ',', 1), 'None') AS UNSIGNED)`,
+    //                 filters.drawId,
+    //             ),
+    //         );
+    //     }
+
+    //     if (filters.quantity) {
+    //         whereClauses.push(
+    //             eq(
+    //                 sql`CAST(SUBSTRING_INDEX(${schema.transactions.description}, 'Quantity: ', -1) AS UNSIGNED)`,
+    //                 filters.quantity,
+    //             ),
+    //         );
+    //     }
+    //     if (filters.startDate) {
+    //         whereClauses.push(
+    //             and(
+    //                 eq(schema.transactions.type, 'Radio ticket purchase'),
+    //                 gte(schema.transactions.createdAt, new Date(filters.startDate)),
+    //             ),
+    //         );
+    //     }
+    //     if (filters.endDate) {
+    //         whereClauses.push(
+    //             and(
+    //                 eq(schema.transactions.type, 'Radio ticket purchase'),
+    //                 lt(schema.transactions.createdAt, new Date(filters.endDate)),
+    //             ),
+    //         );
+    //     }
+    //     let offset = 0;
+    //     let limit = Number(filters.limit) ?? 10; // Default limit
+
+    //     if (filters.page) {
+    //         offset = (filters.page - 1) * limit;
+    //     }
+
+    //     const query = this.db
+    //         .select()
+    //         .from(schema.transactions)
+    //         .where(and(...whereClauses))
+    //         .limit(limit)
+    //         .offset(offset);
+
+    //     const results = await query;
+
+    //     // Parse descriptions and add to payload
+    //     const resultsWithParsedData = results.map(transaction => {
+    //         try {
+    //             const parsed = this.parseTransactionDescription(transaction.description ?? '');
+    //             return {
+    //                 ...transaction,
+    //                 stationId: parsed.stationId,
+    //                 drawId: parsed.drawId,
+    //                 quantity: parsed.quantity
+    //             };
+    //         } catch (error) {
+    //             // If parsing fails, return transaction without parsed data
+    //             console.log(error.message)
+    //             return transaction;
+    //         }
+    //     });
+
+    //     return resultsWithParsedData;
+    // }
     async getAllRadioTransactions(filters: {
         stationId?: number;
         drawId?: number;
@@ -17,6 +105,7 @@ export class TransactionService {
     } = {}) {
         const whereClauses: any[] = [];
         whereClauses.push(eq(schema.transactions.type, 'raffle'));
+
         if (filters.stationId) {
             whereClauses.push(
                 eq(
@@ -43,28 +132,21 @@ export class TransactionService {
                 ),
             );
         }
+
         if (filters.startDate) {
             whereClauses.push(
-                and(
-                    eq(schema.transactions.type, 'Radio ticket purchase'),
-                    gte(schema.transactions.createdAt, new Date(filters.startDate)),
-                ),
+                gte(schema.transactions.createdAt, new Date(filters.startDate)),
             );
         }
+
         if (filters.endDate) {
             whereClauses.push(
-                and(
-                    eq(schema.transactions.type, 'Radio ticket purchase'),
-                    lt(schema.transactions.createdAt, new Date(filters.endDate)),
-                ),
+                lt(schema.transactions.createdAt, new Date(filters.endDate)),
             );
         }
-        let offset = 0;
-        let limit = Number(filters.limit) ?? 10; // Default limit
 
-        if (filters.page) {
-            offset = (filters.page - 1) * limit;
-        }
+        const limit = Number(filters.limit) || 10; // Use || instead of ??
+        const offset = filters.page ? (filters.page - 1) * limit : 0;
 
         const query = this.db
             .select()
@@ -86,13 +168,115 @@ export class TransactionService {
                     quantity: parsed.quantity
                 };
             } catch (error) {
-                // If parsing fails, return transaction without parsed data
+                console.log(error.message);
                 return transaction;
             }
         });
 
         return resultsWithParsedData;
     }
+    // async getTransactionByStation(stationId?: number, filter?: {
+    //     drawId?: number;
+    //     quantity?: number;
+    //     page?: number;
+    //     limit?: number;
+    //     startDate?: string;
+    //     endDate?: string;
+    // }): Promise<any> {
+    //     const whereClauses: any[] = [];
+    //     if (filter?.drawId) {
+    //         whereClauses.push(
+    //             eq(
+    //                 sql`CAST(NULLIF(SUBSTRING_INDEX(SUBSTRING_INDEX(${schema.transactions.description}, 'Draw: ', -1), ',', 1), 'None') AS UNSIGNED)`,
+    //                 filter.drawId,
+    //             ),
+    //         );
+    //     }
+    //     if (filter?.quantity) {
+    //         whereClauses.push(
+    //             eq(
+    //                 sql`CAST(SUBSTRING_INDEX(${schema.transactions.description}, 'Quantity: ', -1) AS UNSIGNED)`,
+    //                 filter.quantity,
+    //             ),
+    //         );
+    //     }
+    //     if (filter?.startDate) {
+    //         whereClauses.push(
+    //             and(
+    //                 eq(schema.transactions.type, 'Radio ticket purchase'),
+    //                 gte(schema.transactions.createdAt, new Date(filter.startDate)),
+    //             ),
+    //         );
+    //     }
+    //     if (filter?.endDate) {
+    //         whereClauses.push(
+    //             and(
+    //                 eq(schema.transactions.type, 'Radio ticket purchase'),
+    //                 lt(schema.transactions.createdAt, new Date(filter.endDate)),
+    //             ),
+    //         );
+    //     }
+    //     if (stationId) {
+    //         const [station] = await this.db
+    //             .select()
+    //             .from(schema.radioStations)
+    //             .where(eq(schema.radioStations.id, stationId))
+    //             .limit(1);
+
+    //         const transactions = await this.searchRadioTicketTransactions(stationId);
+
+    //         // Parse descriptions and add to payload
+    //         const transactionsWithParsedData = transactions.map(transaction => {
+    //             try {
+    //                 const parsed = this.parseTransactionDescription(transaction.description ?? '');
+    //                 return {
+    //                     ...transaction,
+    //                     stationId: parsed.stationId,
+    //                     drawId: parsed.drawId,
+    //                     quantity: parsed.quantity
+    //                 };
+    //             } catch (error) {
+    //                 // If parsing fails, return transaction without parsed data
+    //                 return transaction;
+    //             }
+    //         });
+
+    //         return {
+    //             ...station,
+    //             transactions: transactionsWithParsedData
+    //         };
+    //     }
+
+    //     const transactions = await this.searchRadioTicketTransactions();
+
+    //     const transactionsWithStations = await Promise.all(
+    //         transactions.map(async transaction => {
+    //             let parsed;
+    //             try {
+    //                 parsed = this.parseTransactionDescription(transaction.description ?? '');
+    //             } catch (error) {
+    //                 // If parsing fails, use default values
+    //                 parsed = { stationId: 0, drawId: null, quantity: 0 };
+    //             }
+
+    //             const [station] = await this.db
+    //                 .select()
+    //                 .from(schema.radioStations)
+    //                 .where(eq(schema.radioStations.id, parsed.stationId || 0))
+    //                 .limit(1);
+
+    //             return {
+    //                 ...transaction,
+    //                 stationId: parsed.stationId,
+    //                 drawId: parsed.drawId,
+    //                 quantity: parsed.quantity,
+    //                 station
+    //             };
+    //         })
+    //     );
+
+    //     return transactionsWithStations;
+    // }
     async getTransactionByStation(stationId?: number, filter?: {
         drawId?: number;
         quantity?: number;
@@ -102,6 +286,8 @@ export class TransactionService {
         endDate?: string;
     }): Promise<any> {
         const whereClauses: any[] = [];
+        whereClauses.push(eq(schema.transactions.type, 'Radio ticket purchase'));
+
         if (filter?.drawId) {
             whereClauses.push(
                 eq(
@@ -110,6 +296,7 @@ export class TransactionService {
                 ),
             );
         }
+
         if (filter?.quantity) {
             whereClauses.push(
                 eq(
@@ -118,22 +305,61 @@ export class TransactionService {
                 ),
             );
         }
+
         if (filter?.startDate) {
             whereClauses.push(
-                and(
-                    eq(schema.transactions.type, 'Radio ticket purchase'),
-                    gte(schema.transactions.createdAt, new Date(filter.startDate)),
-                ),
+                gte(schema.transactions.createdAt, new Date(filter.startDate)),
             );
         }
+
         if (filter?.endDate) {
             whereClauses.push(
-                and(
-                    eq(schema.transactions.type, 'Radio ticket purchase'),
-                    lt(schema.transactions.createdAt, new Date(filter.endDate)),
+                lt(schema.transactions.createdAt, new Date(filter.endDate)),
+            );
+        }
+
+        if (stationId) {
+            whereClauses.push(
+                eq(
+                    sql`CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(${schema.transactions.description}, 'Station: ', -1), ',', 1) AS UNSIGNED)`,
+                    stationId,
                 ),
             );
         }
+
+        // Apply pagination
+        const limit = Number(filter?.limit) || 10;
+        const offset = filter?.page ? (filter.page - 1) * limit : 0;
+
+        // Fetch transactions with filters
+        const transactions = await this.db
+            .select()
+            .from(schema.transactions)
+            .where(and(...whereClauses))
+            .limit(limit)
+            .offset(offset);
+
+        // Parse descriptions
+        const transactionsWithParsedData = transactions.map(transaction => {
+            try {
+                const parsed = this.parseTransactionDescription(transaction.description ?? '');
+                return {
+                    ...transaction,
+                    stationId: parsed.stationId,
+                    drawId: parsed.drawId,
+                    quantity: parsed.quantity
+                };
+            } catch (error) {
+                return {
+                    ...transaction,
+                    stationId: 0,
+                    drawId: null,
+                    quantity: 0
+                };
+            }
+        });
+
+        // If specific station requested, fetch station info and group
         if (stationId) {
             const [station] = await this.db
                 .select()
@@ -141,57 +367,31 @@ export class TransactionService {
                 .where(eq(schema.radioStations.id, stationId))
                 .limit(1);
 
-            const transactions = await this.searchRadioTicketTransactions(stationId);
-
-            // Parse descriptions and add to payload
-            const transactionsWithParsedData = transactions.map(transaction => {
-                try {
-                    const parsed = this.parseTransactionDescription(transaction.description ?? '');
-                    return {
-                        ...transaction,
-                        stationId: parsed.stationId,
-                        drawId: parsed.drawId,
-                        quantity: parsed.quantity
-                    };
-                } catch (error) {
-                    // If parsing fails, return transaction without parsed data
-                    return transaction;
-                }
-            });
-
             return {
                 ...station,
                 transactions: transactionsWithParsedData
             };
         }
 
-        const transactions = await this.searchRadioTicketTransactions();
+        // Fetch all unique stations in one query (avoids N+1)
+        const uniqueStationIds = [...new Set(
+            transactionsWithParsedData
+                .map(t => t.stationId)
+                .filter(id => id > 0)
+        )];
 
-        const transactionsWithStations = await Promise.all(
-            transactions.map(async transaction => {
-                let parsed;
-                try {
-                    parsed = this.parseTransactionDescription(transaction.description ?? '');
-                } catch (error) {
-                    // If parsing fails, use default values
-                    parsed = { stationId: 0, drawId: null, quantity: 0 };
-                }
+        const stations = await this.db
+            .select()
+            .from(schema.radioStations)
+            .where(sql`${schema.radioStations.id} IN (${uniqueStationIds.join(',')})`);
 
-                const [station] = await this.db
-                    .select()
-                    .from(schema.radioStations)
-                    .where(eq(schema.radioStations.id, parsed.stationId || 0))
-                    .limit(1);
+        const stationMap = new Map(stations.map(s => [s.id, s]));
 
-                return {
-                    ...transaction,
-                    stationId: parsed.stationId,
-                    drawId: parsed.drawId,
-                    quantity: parsed.quantity,
-                    station
-                };
-            })
-        );
+        // Attach station data to transactions
+        const transactionsWithStations = transactionsWithParsedData.map(transaction => ({
+            ...transaction,
+            station: stationMap.get(transaction.stationId) || null
+        }));
 
         return transactionsWithStations;
     }
