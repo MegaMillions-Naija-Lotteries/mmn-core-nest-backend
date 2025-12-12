@@ -285,74 +285,230 @@ export class RadioDrawService {
     }
   }
 
-  /**
-   * Redraw if the current winner doesn't pick up
-   */
-  async redraw(drawId: number): Promise<DrawResult> {
-    const draw = await this.getDrawById(drawId);
+//   /**
+//    * Redraw if the current winner doesn't pick up
+//    */
+//   async redraw(drawId: number): Promise<DrawResult> {
+//     const draw = await this.getDrawById(drawId);
 
-    if (!draw) {
-      throw new NotFoundException('Draw not found');
-    }
+//     if (!draw) {
+//       throw new NotFoundException('Draw not found');
+//     }
 
-    if (draw.status !== 'active') {
-      throw new BadRequestException('Can only redraw active draws');
-    }
+//     if (draw.status !== 'active') {
+//       throw new BadRequestException('Can only redraw active draws');
+//     }
 
-    // Get session details
-    const session = await this.db
-      .select()
-      .from(radioShowSessions)
-      .where(eq(radioShowSessions.id, draw.sessionId))
-      .limit(1);
+//     // Get session details
+//     const session = await this.db
+//       .select()
+//       .from(radioShowSessions)
+//       .where(eq(radioShowSessions.id, draw.sessionId))
+//       .limit(1);
 
-    if (!session.length) {
-      throw new NotFoundException('Associated session not found');
-    }
+//     if (!session.length) {
+//       throw new NotFoundException('Associated session not found');
+//     }
 
-    // Get eligible tickets (excluding previous winners from this draw)
-    const eligibleTickets = await this.getEligibleTickets(
-      session[0].stationId,
-      draw.winningTicketId ? [draw.winningTicketId] : []
-    );
+//     // Define interface for winner objects in the previous_winners array
+//     interface DrawWinner {
+//       userPhone: string;
+//       reason: string;
+//       user_id: number;
+//       drawn_at: string;
+//       ticket_id: number;
+//       user_name: string;
+//       ticket_uuid: string;
+//       invalidated_at?: string;
+//       excluded_from_redraw: boolean;
+//     }
 
-    if (eligibleTickets.length === 0) {
-      // No more eligible tickets, mark draw as completed
-      await this.db
-        .update(radioDraws)
-        .set({
-          status: 'completed',
-          updatedAt: new Date(),
-        })
-        .where(eq(radioDraws.id, drawId));
+//     // Get all previous winning ticket IDs from this draw
+//     const previousWinners: DrawWinner[] = Array.isArray(draw.previousWinners) ? draw.previousWinners : [];
+//     const previousWinnerTicketIds = [
+//       // Include current winning ticket if it exists
+//       ...(draw.winningTicketId ? [draw.winningTicketId] : []),
+//       // Include all previous winners from the previous_winners array
+//       ...previousWinners
+//         .filter(winner => winner.ticket_id && !winner.excluded_from_redraw)
+//         .map(winner => winner.ticket_id)
+//     ];
 
-      throw new BadRequestException('No more eligible tickets available for redraw');
-    }
+//     // Get eligible tickets, excluding all previous winners from this draw
+//     const eligibleTickets = await this.getEligibleTickets(
+//       session[0].stationId,
+//       previousWinnerTicketIds
+//     );
 
-    // Select a new random winner
-    const { winningTicket, winnerDetails } = await this.selectRandomWinner(eligibleTickets);
+//     if (eligibleTickets.length === 0) {
+//       // No more eligible tickets, mark draw as completed
+//       // await this.db
+//       //   .update(radioDraws)
+//       //   .set({
+//       //     status: 'completed',
+//       //     updatedAt: new Date(),
+//       //   })
+//       //   .where(eq(radioDraws.id, drawId));
 
-    // Update the draw with new winner
-    await this.db
-      .update(radioDraws)
-      .set({
-        winningTicketId: winningTicket.id,
-        winnerDetails,
-        conductedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(radioDraws.id, drawId));
+//       throw new BadRequestException('No more eligible tickets available for redraw');
+//     }
+// //add the current winner to the previous_winners array
+// previousWinners.push({
+//     phone: draw.winnerDetails?.phone,
+//     reason: 'current draw',
+//     user_id: draw.winnerDetails?.user_id,
+//     drawn_at: new Date(draw.conductedAt).toISOString(),
+//     ticket_id: draw.winningTicketId,
+//     user_name: draw.winnerDetails?.user_name,
+//     ticket_uuid: draw.winnerDetails?.ticket_uuid,
+//     invalidated_at: new Date().toISOString(),
+//     excluded_from_redraw: false,
+// });
+//     // Select a new random winner
+//     const { winningTicket, winnerDetails } = await this.selectRandomWinner(eligibleTickets);
 
-    // Get updated draw
-    const updatedDraw = await this.getDrawById(drawId);
+//     // Update the draw with new winner
+//     await this.db
+//       .update(radioDraws)
+//       .set({
+//         winningTicketId: winningTicket.id,
+//         winnerDetails,
+//         conductedAt: new Date(),
+//         updatedAt: new Date(),
+//       })
+//       .where(eq(radioDraws.id, drawId));
 
-    return {
-      draw: updatedDraw,
-      winningTicket,
-      totalEligibleTickets: eligibleTickets.length,
-      winnerDetails,
-    };
+//     // Get updated draw
+//     const updatedDraw = await this.getDrawById(drawId);
+
+//     return {
+//       draw: updatedDraw,
+//       winningTicket,
+//       totalEligibleTickets: eligibleTickets.length,
+//       winnerDetails,
+//     };
+//   }
+/**
+ * Redraw if the current winner doesn't pick up
+ */
+/**
+ * Redraw if the current winner doesn't pick up
+ */
+/**
+ * Redraw if the current winner doesn't pick up
+ */
+async redraw(drawId: number): Promise<DrawResult> {
+  const draw = await this.getDrawById(drawId);
+  if (!draw) {
+    throw new NotFoundException('Draw not found');
   }
+  if (draw.status !== 'active') {
+    throw new BadRequestException('Can only redraw active draws');
+  }
+
+  // Get session details
+  const session = await this.db
+    .select()
+    .from(radioShowSessions)
+    .where(eq(radioShowSessions.id, draw.sessionId))
+    .limit(1);
+  
+  if (!session.length) {
+    throw new NotFoundException('Associated session not found');
+  }
+
+  // Define interface for winner objects in the previous_winners array
+  interface DrawWinner {
+    phone: string;  // Changed from userPhone to phone
+    reason: string;
+    user_id: number;
+    drawn_at: string;
+    ticket_id: number;
+    user_name: string;
+    ticket_uuid: string;
+    invalidated_at?: string;
+    excluded_from_redraw: boolean;
+  }
+
+  // Define interface for winner details
+  interface WinnerDetails {
+    phone?: string;
+    user_id?: number;
+    user_name?: string;
+    ticket_uuid?: string;
+    [key: string]: any; // Allow additional properties
+  }
+
+  // Get all previous winning ticket IDs from this draw
+  const previousWinners: DrawWinner[] = Array.isArray(draw.previousWinners) ? draw.previousWinners : [];
+  const previousWinnerTicketIds = [
+    // Include current winning ticket if it exists
+    ...(draw.winningTicketId ? [draw.winningTicketId] : []),
+    // Include all previous winners from the previous_winners array
+    ...previousWinners
+      .filter(winner => winner.ticket_id && !winner.excluded_from_redraw)
+      .map(winner => winner.ticket_id)
+  ];
+
+  // Get eligible tickets, excluding all previous winners from this draw
+  const eligibleTickets = await this.getEligibleTickets(
+    session[0].stationId,
+    previousWinnerTicketIds
+  );
+
+  if (eligibleTickets.length === 0) {
+    // No more eligible tickets, mark draw as completed
+    // await this.db
+    //   .update(radioDraws)
+    //   .set({
+    //     status: 'completed',
+    //     updatedAt: new Date(),
+    //   })
+    //   .where(eq(radioDraws.id, drawId));
+    throw new BadRequestException('No more eligible tickets available for redraw');
+  }
+
+  // Add the current winner to the previous_winners array
+  if (draw.winningTicketId && draw.winnerDetails) {  // Added null check
+    const winnerDetails = draw.winnerDetails as WinnerDetails;
+    previousWinners.push({
+      phone: winnerDetails.phone || '',
+      reason: 'current draw',
+      user_id: winnerDetails.user_id || 0,
+      drawn_at: draw.conductedAt ? new Date(draw.conductedAt).toISOString() : new Date().toISOString(),
+      ticket_id: draw.winningTicketId,
+      user_name: winnerDetails.user_name || '',
+      ticket_uuid: winnerDetails.ticket_uuid || '',
+      invalidated_at: new Date().toISOString(),
+      excluded_from_redraw: false,
+    });
+  }
+
+  // Select a new random winner
+  const { winningTicket, winnerDetails } = await this.selectRandomWinner(eligibleTickets);
+
+  // Update the draw with new winner and updated previous_winners array
+  await this.db
+    .update(radioDraws)
+    .set({
+      winningTicketId: winningTicket.id,
+      winnerDetails,
+      previousWinners, // Add this line to save the updated previous winners
+      conductedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(radioDraws.id, drawId));
+
+  // Get updated draw
+  const updatedDraw = await this.getDrawById(drawId);
+
+  return {
+    draw: updatedDraw,
+    winningTicket,
+    totalEligibleTickets: eligibleTickets.length,
+    winnerDetails,
+  };
+}
 
   /**
    * Mark draw as completed (winner picked up)
@@ -422,6 +578,7 @@ export class RadioDrawService {
         updatedAt: radioTickets.updatedAt,
         userName: users.name || '',
         userEmail: users.email || '',
+        userPhone: users.phone || '',
       })
       .from(radioTickets)
       .leftJoin(users, eq(radioTickets.userId, users.id))
@@ -455,7 +612,8 @@ export class RadioDrawService {
       .select({
         ticket: radioTickets,
         userName: users.name,
-        userEmail: users.email
+        userEmail: users.email,
+        userPhone: users.phone
       })
       .from(radioTickets)
       .innerJoin(users, eq(radioTickets.userId, users.id))
@@ -464,13 +622,14 @@ export class RadioDrawService {
     // Create a weighted array based on ticket quantity
     const weightedTickets: ExtendedRadioTicket[] = [];
     
-    for (const { ticket, userName, userEmail } of ticketsWithUsers) {
+    for (const { ticket, userName, userEmail, userPhone } of ticketsWithUsers) {
       const availableQuantity = ticket.quantity - ticket.usedCount;
       for (let i = 0; i < availableQuantity; i++) {
         weightedTickets.push({
           ...ticket,
           userName: userName || '',
-          userEmail: userEmail || ''
+          userEmail: userEmail || '',
+          userPhone: userPhone || '',
         });
       }
     }
@@ -498,6 +657,7 @@ export class RadioDrawService {
       userId: winningTicket.userId,
       userName: winningTicket.userName,
       userEmail: winningTicket.userEmail,
+      userPhone: winningTicket.userPhone,
       selectedAt: new Date(),
       entryNumber: randomIndex + 1,
       totalEntries: weightedTickets.length,
@@ -526,12 +686,42 @@ export class RadioDrawService {
   /**
    * Get all draws for a session
    */
-  async getDrawsBySession(sessionId: number): Promise<SelectRadioDraw[]> {
-    return await this.db
-      .select()
-      .from(radioDraws)
-      .where(eq(radioDraws.sessionId, sessionId))
-      .orderBy(asc(radioDraws.drawNumber));
+  async getDrawsBySession(sessionId: number): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      success: boolean;
+      message: string;
+      data: SelectRadioDraw[];
+    };
+  }> {
+    try {
+      const draws = await this.db
+        .select()
+        .from(radioDraws)
+        .where(eq(radioDraws.sessionId, sessionId))
+        .orderBy(asc(radioDraws.conductedAt));
+
+      return {
+        success: true,
+        message: 'Draws retrieved successfully',
+        data: {
+          success: true,
+          message: 'Draws retrieved successfully',
+          data: draws,
+        },
+      };
+    } catch (error) {
+      return {
+        success: true,
+        message: 'Draws retrieved successfully',
+        data: {
+          success: false,
+          message: `Failed query: ${error.query}\nparams: ${error.params.join(', ')}`,
+          data: [],
+        },
+      };
+    }
   }
 
   /**

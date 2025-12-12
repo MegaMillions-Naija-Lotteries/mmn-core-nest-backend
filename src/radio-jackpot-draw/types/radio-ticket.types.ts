@@ -15,5 +15,4 @@ export interface ExtendedRadioTicket extends SelectRadioTicket {
   invalidatedAt: Date | null;
   userName: string;
   userEmail: string;
-  userPhone: string;
 }

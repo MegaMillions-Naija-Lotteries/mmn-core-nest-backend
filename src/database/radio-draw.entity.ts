@@ -29,6 +29,7 @@ import {
     prizes: json("prizes"),
     drawSettings: json("draw_settings"),
     winnerDetails: json("winner_details"),
+    previousWinners: json("previous_winners").$default(() => []),
     totalEntries: int("total_entries").notNull().default(0),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),

@@ -1,8 +1,10 @@
 import { BadRequestException, Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
-import { and, eq, inArray, Placeholder, sql, SQLWrapper } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, Placeholder, sql, SQLWrapper } from 'drizzle-orm';
 import { MySql2Database } from 'drizzle-orm/mysql2';
 import { USER_ROLE } from 'src/auth/roles/roles.constant';
 import { schema } from 'src/database/schema';
+import { SelectRadioShowSession } from 'src/database/radio-show-session.entity';
+import { RadioShowSessionResponse } from './radio-show-session.dto';
 
 @Injectable()
 export class RadioShowSessionService {
@@ -11,9 +13,20 @@ export class RadioShowSessionService {
         private db: MySql2Database<typeof schema>
     ) {}
     
-    async create(user:{id:number}, createRadioShowSessionDto: {
+    async create(createRadioShowSessionDto: {
         showId: number;
+        userId: number;
     }) {
+        // get the user using the user id
+        // if they exist continue if not throw an error
+        const [user] = await this.db
+            .select()
+            .from(schema.users)
+            .where(eq(schema.users.id, createRadioShowSessionDto.userId))
+            .limit(1);
+        if (!user) {
+            throw new BadRequestException('User not found');
+        }
         // check if the user and the show share a similar station if not throw a forbidden error
         // 1. Get the show and its stationId
         const [show] = await this.db
@@ -128,17 +141,34 @@ export class RadioShowSessionService {
         }
         // Optionally, filter by userId if sessions are user-specific
         // Only restrict to userId if NOT admin or station
-        if (user.role !== USER_ROLE.ROLE_ADMIN && user.role !== USER_ROLE.ROLE_STATION) {
-            whereClauses.push(eq(schema.radioShowSessions.userId, user.id));
-        }
+        // if (user.role !== USER_ROLE.ROLE_ADMIN && user.role !== USER_ROLE.ROLE_STATION) {
+        //     whereClauses.push(eq(schema.radioShowSessions.userId, user.id));
+        // }
         
         // Pagination
         const offset = (page - 1) * limit;
 
         // Query
         const query = this.db
-            .select()
+            .select({
+                session: schema.radioShowSessions,
+                show: schema.radioShows,
+                station: schema.radioStations,
+                totalDraws: sql<number>`(
+                    SELECT COUNT(*)
+                    FROM ${schema.radioDraws}
+                    WHERE ${schema.radioDraws.sessionId} = ${schema.radioShowSessions.id}
+                )`,
+                totalWinners: sql<number>`(
+                    SELECT COUNT(*)
+                    FROM ${schema.radioDraws}
+                    WHERE ${schema.radioDraws.sessionId} = ${schema.radioShowSessions.id}
+                    AND ${schema.radioDraws.winningTicketId} IS NOT NULL
+                )`,
+            })
             .from(schema.radioShowSessions)
+            .innerJoin(schema.radioShows, eq(schema.radioShows.id, schema.radioShowSessions.showId))
+            .innerJoin(schema.radioStations, eq(schema.radioStations.id, schema.radioShowSessions.stationId))
             .limit(limit)
             .offset(offset);
 
@@ -155,14 +185,20 @@ export class RadioShowSessionService {
             .where(whereClauses.length > 0 ? and(...whereClauses) : undefined);
 
         return {
-            data: results,
+            data: results.map((session) => ({
+                ...session.session,
+                show: session.show,
+                station: session.station,
+                totalDraws: session.totalDraws,
+                totalWinners: session.totalWinners,
+            })),
             total: count, // Replace with actual count if needed
             page,
             limit,
         };
     }
     // Get a single radio show session by ID
-    async getById(id: number) {
+    async getById(id: number): Promise<RadioShowSessionResponse | null> {
         // Fetch the radio show session by its ID
         const [session] = await this.db
             .select()
@@ -173,12 +209,64 @@ export class RadioShowSessionService {
         if (!session) {
             return null;
         }
-        return session;
+
+        const draws = await this.db
+            .select({
+                draw: schema.radioDraws,
+                winnerName: schema.users.name,
+                winnerEmail: schema.users.email,
+                winnerPhone: schema.users.phone,
+            })
+            .from(schema.radioDraws)
+            .innerJoin(schema.radioTickets, eq(schema.radioDraws.winningTicketId, schema.radioTickets.id))
+            .innerJoin(schema.users, eq(schema.radioTickets.userId, schema.users.id))
+            .where(and(
+                eq(schema.radioDraws.sessionId, id),
+                isNotNull(schema.radioDraws.winningTicketId),
+            ))
+            .orderBy(asc(schema.radioDraws.drawNumber));
+
+        const show = await this.db
+            .select()
+            .from(schema.radioShows)
+            .where(eq(schema.radioShows.id, session.showId))
+            .limit(1);
+
+        const stats = await this.db
+            .select({
+                total_draws: sql<number>`count(*)`,
+                completed_draws: sql<number>`count(case when ${eq(schema.radioDraws.status, 'completed')} then 1 end)`,
+                pending_draws: sql<number>`count(case when ${eq(schema.radioDraws.status, 'pending')} then 1 end)`,
+                active_draws: sql<number>`count(case when ${eq(schema.radioDraws.status, 'active')} then 1 end)`,
+                total_winners: sql<number>`count(case when ${schema.radioDraws.winningTicketId} is not null then 1 end)`,
+                totalEntries: sql<number>`sum(${schema.radioDraws.totalEntries})`,
+            })
+            .from(schema.radioDraws)
+            .where(eq(schema.radioDraws.sessionId, id));
+
+        if (!session) return null;
+
+        return {
+            session,
+            draws: draws.map(draw => ({
+                ...draw.draw,
+                winner: {
+                    name: draw.winnerName,
+                    email: draw.winnerEmail,
+                    phone: draw.winnerPhone
+                }
+            })),
+            show: show[0],
+            stats: stats[0],
+            userId: session.userId,
+            status: session.status,
+        };
     }
+
     // Update a radio show session by ID
-    async updateById(id: number, updateDto: any) {
-        // Remove fields that should not be updated (e.g., id, userId, showId, createdAt)
-        const { id: _id, userId: _userId, showId: _showId, createdAt: _createdAt, ...updateFields } = updateDto || {};
+async updateById(id: number, updateDto: any) {
+    // Remove fields that should not be updated (e.g., id, userId, showId, createdAt)
+    const { id: _id, userId: _userId, showId: _showId, createdAt: _createdAt, ...updateFields } = updateDto || {};
 
         if (Object.keys(updateFields).length === 0) {
             throw new Error('No valid fields to update');

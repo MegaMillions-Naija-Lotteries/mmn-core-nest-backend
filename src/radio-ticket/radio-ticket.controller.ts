@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, Query, Res, UseGuards, Version } from '@nestjs/common';
 import { RadioTicketService } from './radio-ticket.service';
 import { JwtGuard } from 'src/auth/guard';
 import { RolesGuard } from 'src/auth/roles/roles.guard';
@@ -6,13 +6,20 @@ import { GetUser } from 'src/auth/decorator';
 import { HttpModule } from '@nestjs/axios';
 import { PaystackService } from '../paystack/paystack.service';
 import { Public } from 'src/auth/decorator/public.decorator';
+import { Response } from 'express';
 
 @UseGuards(JwtGuard, RolesGuard)
 @Controller('tickets')
 export class RadioTicketController {
     constructor(private readonly radioTicketService: RadioTicketService) {}
 
+    @Get('run/test')
+    async test() {
+        return 'test';
+    }
+    
     @Post('purchase')
+    @Version('1')
     async initRadioTicketPurchase(
         @Body('stationId') stationId: number,
         @Body('drawId') drawId: number,
@@ -31,6 +38,7 @@ export class RadioTicketController {
 
     @Public()
     @Post('guest-purchase')
+    @Version('1')
     async initGuestRadioTicketPurchase(
         @Body('phone') phone: string,
         @Body('stationId') stationId: number,
@@ -64,16 +72,28 @@ export class RadioTicketController {
 
     @Public()
     @Get('verify-payment')
+    @Version('1')
     async verifyRadioTicketPurchase(
         @Query('reference') reference: string,
-        paymentmethod:string
-        // @Body('paymentmethod') paymentmethod: number
+        @Query('paymentMethod') paymentmethod?: string,
     ){
-        console.log(reference)
-        return this.radioTicketService.verifyRadioTicketPayment(
+        return await this.radioTicketService.verifyRadioTicketPayment(
             reference,
-            'paystack'
-        )
+            paymentmethod || 'paystack'
+        );
+    }
+
+    @Public()
+    @Post('verify-payment')
+    @Version('1')
+    async verifyRadioTicketPurchasePost(
+        @Body('reference') reference: string,
+        @Body('paymentMethod') paymentmethod: string,
+    ){
+        return await this.radioTicketService.verifyRadioTicketPayment(
+            reference,
+            paymentmethod
+        );
     }
 
 }

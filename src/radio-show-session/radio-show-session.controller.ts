@@ -1,11 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Request, UseGuards } from '@nestjs/common';
-import { JwtGuard } from 'src/auth/guard';
-import { RolesGuard } from 'src/auth/roles/roles.guard';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Request, UseGuards, Version } from '@nestjs/common';
 import { RadioShowSessionService } from './radio-show-session.service';
 import { GetUser } from 'src/auth/decorator';
 import { USER_ROLE } from 'src/auth/roles/roles.constant';
 import { Roles } from 'src/auth/roles/roles.decorator';
 import { CreateRadioShowSessionDto } from './dto/create-radio-show-session.dto';
+import { JwtGuard } from 'src/auth/guard';
+import { RolesGuard } from 'src/auth/roles/roles.guard';
 
 @UseGuards(JwtGuard, RolesGuard)
 @Controller('sessions')
@@ -13,14 +13,15 @@ export class RadioShowSessionController {
     constructor ( private radioShowSessionService:RadioShowSessionService) {}
 
     @Post()
-    @Roles(USER_ROLE.ROLE_OAP, USER_ROLE.ROLE_STATION)
-    async create(@GetUser() user:any, @Body() createRadioShowSessionDto: CreateRadioShowSessionDto) {
-        return this.radioShowSessionService.create(user, createRadioShowSessionDto);
+    @Version('1')
+    // @Roles(USER_ROLE.ROLE_OAP, USER_ROLE.ROLE_STATION)
+    async create(@Body() createRadioShowSessionDto: CreateRadioShowSessionDto) {
+        return this.radioShowSessionService.create(createRadioShowSessionDto);
     }
     // Get all sessions
     // GET /radio-show-sessions
-    @UseGuards(JwtGuard, RolesGuard)
     @Get()
+    @Version('1')
     async getAllSessions(
         @GetUser() user:any,
         @Query('page') page?: string,
@@ -50,6 +51,8 @@ export class RadioShowSessionController {
     // GET /radio-show-sessions/:id
 
     @Get(':id')
+    @Version('1')
+    @Roles(USER_ROLE.ROLE_OAP, USER_ROLE.ROLE_STATION, USER_ROLE.ROLE_ADMIN)
     async getSessionById(
         @GetUser() user: any,
         @Param('id') id: string
@@ -70,21 +73,22 @@ export class RadioShowSessionController {
         }
         // Optionally, you could check here if the user is allowed to access this session
         // For example, if user is not admin/station, ensure session.userId === user.id
-        if (
-            user.role !== USER_ROLE.ROLE_ADMIN && // Not admin
-            user.role !== USER_ROLE.ROLE_STATION && // Not station
-            session.userId !== user.id
-        ) {
-            return {
-                statusCode: 403,
-                message: 'Forbidden',
-            };
-        }
+        // if (
+        //     user.role !== USER_ROLE.ROLE_ADMIN && // Not admin
+        //     user.role !== USER_ROLE.ROLE_STATION && // Not station
+        //     session.userId !== user.id
+        // ) {
+        //     return {
+        //         statusCode: 403,
+        //         message: 'Forbidden',
+        //     };
+        // }
         return session;
     }
     // Update a radio show session by ID
     // PATCH /radio-show-sessions/:id
     @Patch(':id')
+    @Version('1')
     @Roles(USER_ROLE.ROLE_ADMIN)
     async updateSession(
         @GetUser() user: any,
@@ -130,7 +134,8 @@ export class RadioShowSessionController {
     }
     // DELETE /radio-show-sessions/:id
     @Delete(':id')
-    @Roles(USER_ROLE.ROLE_ADMIN)
+    @Version('1')
+    // @Roles(USER_ROLE.ROLE_ADMIN)
     async deleteSession(
         @GetUser() user: any,
         @Param('id') id: string
@@ -177,6 +182,7 @@ export class RadioShowSessionController {
 
     // PATCH /radio-show-sessions/:id/end
     @Patch(':id/end')
+    @Version('1')
     async endSession(
         @GetUser() user: any,
         @Param('id') id: string
@@ -197,16 +203,16 @@ export class RadioShowSessionController {
             };
         }
         // Only allow end if user is admin, station, or the session owner
-        if (
-            user.role !== USER_ROLE.ROLE_ADMIN &&
-            user.role !== USER_ROLE.ROLE_STATION &&
-            session.userId !== user.id
-        ) {
-            return {
-                statusCode: 403,
-                message: 'Forbidden',
-            };
-        }
+        // if (
+        //     user.role !== USER_ROLE.ROLE_ADMIN &&
+        //     user.role !== USER_ROLE.ROLE_STATION &&
+        //     session.userId !== user.id
+        // ) {
+        //     return {
+        //         statusCode: 403,
+        //         message: 'Forbidden',
+        //     };
+        // }
         // Only allow ending if session is currently active
         if (session.status !== 'active') {
             return {
@@ -230,6 +236,7 @@ export class RadioShowSessionController {
     }
     // GET /radio-show-session/:id/draws
     @Get(':id/draws')
+    @Version('1')
     async getSessionDraws(
         @GetUser() user: any,
         @Param('id') id: string
@@ -276,6 +283,5 @@ export class RadioShowSessionController {
             };
         }
     }
-
 
 }

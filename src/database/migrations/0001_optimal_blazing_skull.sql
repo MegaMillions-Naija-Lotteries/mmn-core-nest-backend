@@ -1,4 +1,4 @@
-CREATE TABLE `Managers` (
+CREATE TABLE `managers` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`name` varchar(255),
 	`email` varchar(255),
@@ -29,7 +29,7 @@ CREATE TABLE `Managers` (
 	CONSTRAINT `UNIQUE_MANAGERS_ID` UNIQUE(`id`)
 );
 --> statement-breakpoint
-CREATE TABLE `Paymentmethodconfig` (
+CREATE TABLE `paymentmethodconfig` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`logo` varchar(255),
 	`name` varchar(255),
@@ -43,7 +43,7 @@ CREATE TABLE `Paymentmethodconfig` (
 	CONSTRAINT `Paymentmethodconfig_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
-CREATE TABLE `Paymentmethod` (
+CREATE TABLE `paymentmethod` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`user_id` int,
 	`manager_id` int,
@@ -83,6 +83,7 @@ CREATE TABLE `radio_jackpot_draws` (
 	`title` varchar(255) NOT NULL,
 	`description` text,
 	`station_id` int,
+	`show_id` int,
 	`draw_period` enum('daily','weekly','biweekly','monthly','quarterly','custom') NOT NULL,
 	`period_start` datetime NOT NULL,
 	`period_end` datetime NOT NULL,
@@ -143,7 +144,7 @@ CREATE TABLE `radio_tickets` (
 	CONSTRAINT `radio_tickets_ticket_uuid_unique` UNIQUE(`ticket_uuid`)
 );
 --> statement-breakpoint
-CREATE TABLE `Transaction` (
+CREATE TABLE `transaction` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`id_user` int,
 	`id_manager` int,

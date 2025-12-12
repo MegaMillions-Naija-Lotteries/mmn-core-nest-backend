@@ -8,24 +8,26 @@ import {
     Delete,
     Query,
     ParseIntPipe,
+    Version,
     UseGuards,
   } from '@nestjs/common';
   import { RadioStationService } from './radio-station.service';
   import { CreateRadioStationDto } from './dto/create-radio-station.dto';
   import { UpdateRadioStationDto } from './dto/update-radio-station.dto';
-import { JwtGuard } from 'src/auth/guard';
-import { RolesGuard } from 'src/auth/roles/roles.guard';
 import { Roles } from 'src/auth/roles/roles.decorator';
 import { USER_ROLE } from 'src/auth/roles/roles.constant';
 import { GetUser } from 'src/auth/decorator';
 import { Public } from 'src/auth/decorator/public.decorator';
+import { JwtGuard } from 'src/auth/guard/jwt.guard';
+import { RolesGuard } from 'src/auth/roles/roles.guard';
 
-  @UseGuards(JwtGuard, RolesGuard)
-  @Controller('stations')
-  export class RadioStationController{
+@UseGuards(JwtGuard, RolesGuard)
+@Controller('stations')
+export class RadioStationController{
     constructor(private readonly radioStationService: RadioStationService) {}
 
     @Post()
+    @Version('1')
     @Roles(USER_ROLE.ROLE_ADMIN, USER_ROLE.ROLE_STATION)
     create(@Body() createRadioStationDto: CreateRadioStationDto){
         return this.radioStationService.create(createRadioStationDto)
@@ -33,6 +35,7 @@ import { Public } from 'src/auth/decorator/public.decorator';
 
     @Public()
     @Get()
+    @Version('1')
     findAll(
         @Query('name') name?: string,
         @Query('isActive') isActive?: string,
@@ -46,6 +49,7 @@ import { Public } from 'src/auth/decorator/public.decorator';
     }
 
     @Get('/user')
+    @Version('1')
     findAllByUser(
         @GetUser() user: any,
         @Query('name') name?: string,
@@ -59,13 +63,18 @@ import { Public } from 'src/auth/decorator/public.decorator';
         return this.radioStationService.findAllByUser(user, filters);
     }
 
+    @Public()
     @Get(':id')
-    findOne(@Param('id', ParseIntPipe) id: number) {
-        return this.radioStationService.findOne(id);
+    @Version('1')
+    findOne(
+        @Param('id', ParseIntPipe) id: number,
+        @GetUser() user: any) {
+        return this.radioStationService.findOne(id, user);
     }
 
     // attach the station to a user and change the user to oap or station
     @Post(':id/attach-user')
+    @Version('1')
     @Roles(USER_ROLE.ROLE_ADMIN, USER_ROLE.ROLE_STATION)
     async attachUserToStation(
       @Param('id', ParseIntPipe) stationId: number,
@@ -77,6 +86,8 @@ import { Public } from 'src/auth/decorator/public.decorator';
     }
     
     @Patch(':id')
+    @Version('1')
+    @Roles(USER_ROLE.ROLE_ADMIN)
     update(
         @Param('id', ParseIntPipe) id: number,
         @Body() updateRadioStationDto: UpdateRadioStationDto,
@@ -85,6 +96,8 @@ import { Public } from 'src/auth/decorator/public.decorator';
     }
 
     @Delete(':id')
+    @Version('1')
+    @Roles(USER_ROLE.ROLE_ADMIN)
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.radioStationService.remove(id);
     }
