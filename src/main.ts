@@ -15,22 +15,30 @@ async function bootstrap() {
     }),
   );
   app.enableVersioning({
-    type: VersioningType.URI, // Enables /v1/ routes
+    type: VersioningType.URI,
   });
-  app.enableCors(
-    {
-      origin: [
-        '*',
-        'http://localhost:4200',
-        'http://localhost:3000',
-        'http://127.0.0.1:3000', 
-        'https://mmnraffle.com',
-        'https://dev.megamillionsnaija.com'
-      ],
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-      credentials: true,
-    }
-  );
+
+  const allowedOrigins = new Set<string>([
+    'http://localhost:4200',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://mmnraffle.com',
+    'https://dev.megamillionsnaija.com',
+    'https://admin.megamillionsnaija.com',
+    'https://mmn-admin-radio-dashboard.azurewebsites.net',
+  ]);
+
+  app.enableCors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.has(origin)) return callback(null, true);
+      return callback(new Error(`CORS blocked for origin: ${origin}`), false);
+    },
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    credentials: true,
+    optionsSuccessStatus: 204,
+  });
   const configDoc = new DocumentBuilder()
     .setTitle('MMN Radio Raffle API Documentation')
     .setDescription('MMN Radio Raffle API Documentation')
