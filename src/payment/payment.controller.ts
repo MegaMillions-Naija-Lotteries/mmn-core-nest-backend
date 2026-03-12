@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, Param, UseGuards, Version } from '@nestjs/common';
 import { PaystackService } from '../paystack/paystack.service';
 import { WebhookGuard } from '../paystack/guards/webhook.guard';
+import { JwtGuard } from '../auth/guard/jwt.guard';
 import { InitializeTransactionDto } from '../paystack/dto/initialize-transaction.dto';
 import { CreateCustomerDto } from '../paystack/dto/create-customer.dto';
 
@@ -10,24 +11,28 @@ export class PaymentController {
 
   @Post('initialize')
   @Version('1')
+  @UseGuards(JwtGuard)
   async initializePayment(@Body() dto: InitializeTransactionDto) {
     return this.paystackService.initializeTransaction(dto);
   }
 
   @Get('verify/:reference')
   @Version('1')
+  @UseGuards(JwtGuard)
   async verifyPayment(@Param('reference') reference: string) {
     return this.paystackService.verifyTransaction(reference);
   }
 
   @Post('customer')
   @Version('1')
+  @UseGuards(JwtGuard)
   async createCustomer(@Body() dto: CreateCustomerDto) {
     return this.paystackService.createCustomer(dto);
   }
 
   @Get('banks')
   @Version('1')
+  @UseGuards(JwtGuard)
   async getBanks() {
     return this.paystackService.listBanks({ country: 'nigeria' });
   }

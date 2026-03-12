@@ -29,6 +29,7 @@ import { USER_ROLE } from 'src/auth/roles/roles.constant';
     */
     @Post()
     @Version('1')
+    @Roles(USER_ROLE.ROLE_ADMIN, USER_ROLE.ROLE_OAP, USER_ROLE.ROLE_STATION)
     async create(@Body() createRadioDrawDto: CreateRadioDrawDto){
       return this.radioDrawService.create(createRadioDrawDto);
     }
@@ -37,6 +38,7 @@ import { USER_ROLE } from 'src/auth/roles/roles.constant';
      */
     @Post('create-conduct')
     @Version('1')
+    @Roles(USER_ROLE.ROLE_ADMIN, USER_ROLE.ROLE_OAP, USER_ROLE.ROLE_STATION)
     async conductDraw(@Body() conductDrawDto: ConductDrawDto): Promise<{
       success: boolean;
       message: string;
@@ -66,6 +68,7 @@ import { USER_ROLE } from 'src/auth/roles/roles.constant';
      */
     @Put(':drawId/redraw')
     @Version('1')
+    @Roles(USER_ROLE.ROLE_ADMIN)
     async redraw(@Param('drawId', ParseIntPipe) drawId: number): Promise<{
       success: boolean;
       message: string;
@@ -95,6 +98,7 @@ import { USER_ROLE } from 'src/auth/roles/roles.constant';
      */
     @Put(':drawId/complete')
     @Version('1')
+    @Roles(USER_ROLE.ROLE_ADMIN)
     async completeDraw(@Param('drawId', ParseIntPipe) drawId: number): Promise<{
       success: boolean;
       message: string;
@@ -124,6 +128,7 @@ import { USER_ROLE } from 'src/auth/roles/roles.constant';
      */
     @Delete(':drawId')
     @Version('1')
+    @Roles(USER_ROLE.ROLE_ADMIN)
     async cancelDraw(@Param('drawId', ParseIntPipe) drawId: number): Promise<{
       success: boolean;
       message: string;

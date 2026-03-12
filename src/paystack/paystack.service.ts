@@ -24,11 +24,8 @@ export class PaystackService {
   }
 
   private getHeaders() {
-    // Test if your config is working
-console.log('Secret Key:', this.config.secretKey);
     return {
-      Authorization: `Bearer ${process.env.PAYSTACK_SK_TEST}`,
-      // Authorization: `Bearer ${this.config.secretKey}`,
+      Authorization: `Bearer ${this.config.secretKey}`,
       'Content-Type': 'application/json',
     };
   }
