@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject, Logger } from '@nestjs/common';
 import { SelectRadioDraw, CreateRadioDraw, radioDraws } from '../database/radio-draw.entity';
 import { SelectRadioTicket, radioTickets } from '../database/radio-ticket.entity';
 import { radioShowSessions, SelectRadioShowSession } from '../database/radio-show-session.entity';
@@ -7,16 +7,7 @@ import { eq, and, gte, lt, desc, sql, isNull, asc, inArray } from 'drizzle-orm';
 import { MySql2Database } from 'drizzle-orm/mysql2';
 import { schema, users } from '../database/schema';
 import { CreateRadioDrawDto } from './dto/create-radio-draw.dto';
-
-export interface ConductDrawDto {
-  sessionId: number;
-  showId: number;
-  title: string;
-  description?: string;
-  maxEntries?: number;
-  prizes?: any;
-  drawSettings?: any;
-}
+import { ConductRadioDrawDto } from './dto/conduct-radio-draw.dto';
 
 export interface DrawResult {
   draw: SelectRadioDraw;
@@ -27,6 +18,8 @@ export interface DrawResult {
 
 @Injectable()
 export class RadioDrawService {
+  private readonly logger = new Logger(RadioDrawService.name);
+
   constructor(
     @Inject('DATABASE')
     private readonly db: MySql2Database<typeof schema>) {}
@@ -53,7 +46,7 @@ export class RadioDrawService {
   /**
    * Conduct a new draw for a radio show session
    */
-  // async conductDraw(conductDrawDto: ConductDrawDto): Promise<DrawResult> {
+  // async conductDraw(conductDrawDto: ConductRadioDrawDto): Promise<DrawResult> {
   //   const { sessionId, showId, title, description, maxEntries, prizes, drawSettings } = conductDrawDto;
 
   //   // Validate session exists and is active
@@ -132,55 +125,41 @@ export class RadioDrawService {
   //     winnerDetails,
   //   };
   // }
-  async conductDraw(conductDrawDto: ConductDrawDto): Promise<DrawResult> {
-    try {
-      console.log('🔍 Starting conductDraw with DTO:', JSON.stringify(conductDrawDto, null, 2));
-      
+  async conductDraw(conductDrawDto: ConductRadioDrawDto): Promise<DrawResult> {
       const { sessionId, showId, title, description, maxEntries, prizes, drawSettings } = conductDrawDto;
-      
+
       // Validate session exists and is active
-      console.log('🔍 Validating session with ID:', sessionId);
       const session = await this.db
         .select()
         .from(radioShowSessions)
         .where(eq(radioShowSessions.id, sessionId))
         .limit(1);
-        
+
       if (!session.length) {
-        console.error('❌ Session not found for ID:', sessionId);
         throw new NotFoundException('Radio show session not found');
       }
-      
+
       if (session[0].status !== 'active') {
-        console.error('❌ Session not active. Status:', session[0].status);
         throw new BadRequestException('Session must be active to conduct a draw');
       }
-      
-      console.log('✅ Session validated:', session[0]);
-  
+
       // Get the next draw number for this session
-      console.log('🔍 Getting next draw number for session:', sessionId);
       const lastDraw = await this.db
         .select({ drawNumber: radioDraws.drawNumber })
         .from(radioDraws)
         .where(eq(radioDraws.sessionId, sessionId))
         .orderBy(desc(radioDraws.drawNumber))
         .limit(1);
-        
+
       const drawNumber = lastDraw.length ? lastDraw[0].drawNumber + 1 : 1;
-      console.log('✅ Next draw number:', drawNumber);
-  
+
       // Get eligible tickets
-      console.log('🔍 Getting eligible tickets for station:', session[0].stationId);
       const eligibleTickets = await this.getEligibleTickets(session[0].stationId);
-      
+
       if (eligibleTickets.length === 0) {
-        console.error('❌ No eligible tickets found for station:', session[0].stationId);
         throw new BadRequestException('No eligible tickets found for this draw');
       }
-      
-      console.log('✅ Found eligible tickets:', eligibleTickets.length);
-  
+
       // Create the draw record
       const drawData: CreateRadioDraw = {
         title,
@@ -196,93 +175,34 @@ export class RadioDrawService {
         drawSettings: drawSettings || {},
         totalEntries: eligibleTickets.length,
       };
-      
-      console.log('🔍 Draw data being inserted:', JSON.stringify(drawData, null, 2));
-      console.log('🔍 Draw data types:', {
-        title: typeof drawData.title,
-        description: typeof drawData.description,
-        sessionId: typeof drawData.sessionId,
-        showId: typeof drawData.showId,
-        drawNumber: typeof drawData.drawNumber,
-        scheduledAt: typeof drawData.scheduledAt,
-        conductedAt: typeof drawData.conductedAt,
-        status: typeof drawData.status,
-        maxEntries: typeof drawData.maxEntries,
-        prizes: typeof drawData.prizes,
-        drawSettings: typeof drawData.drawSettings,
-        totalEntries: typeof drawData.totalEntries,
-      });
-  
-      let newDraw;
-      try {
-        console.log('🔍 Attempting to insert draw record...');
-        [newDraw] = await this.db
-          .insert(radioDraws)
-          .values(drawData)
-          .$returningId();
-        console.log('✅ Draw record inserted successfully with ID:', newDraw.id);
-      } catch (insertError) {
-        console.error('❌ Database insert error:', {
-          message: insertError.message,
-          code: insertError.code,
-          detail: insertError.detail,
-          stack: insertError.stack,
-          query: insertError.query,
-          parameters: insertError.parameters
-        });
-        
-        // Re-throw with more context
-        throw new Error(`Failed to insert draw record: ${insertError.message}`);
-      }
-  
+
+      const [newDraw] = await this.db
+        .insert(radioDraws)
+        .values(drawData)
+        .$returningId();
+
       // Select a random winner
-      console.log('🔍 Selecting random winner...');
       const { winningTicket, winnerDetails } = await this.selectRandomWinner(eligibleTickets);
-      console.log('✅ Winner selected:', { ticketId: winningTicket.id, winnerDetails });
-  
+
       // Update the draw with winner information
-      try {
-        console.log('🔍 Updating draw with winner information...');
-        await this.db
-          .update(radioDraws)
-          .set({
-            winningTicketId: winningTicket.id,
-            winnerDetails,
-            updatedAt: new Date(),
-          })
-          .where(eq(radioDraws.id, newDraw.id));
-        console.log('✅ Draw updated with winner information');
-      } catch (updateError) {
-        console.error('❌ Error updating draw with winner:', updateError);
-        throw new Error(`Failed to update draw with winner: ${updateError.message}`);
-      }
-  
+      await this.db
+        .update(radioDraws)
+        .set({
+          winningTicketId: winningTicket.id,
+          winnerDetails,
+          updatedAt: new Date(),
+        })
+        .where(eq(radioDraws.id, newDraw.id));
+
       // Get the complete draw record
-      console.log('🔍 Fetching complete draw record...');
       const completeDraw = await this.getDrawById(newDraw.id);
-      console.log('✅ Complete draw fetched');
-  
-      const result = {
+
+      return {
         draw: completeDraw,
         winningTicket,
         totalEligibleTickets: eligibleTickets.length,
         winnerDetails,
       };
-  
-      console.log('✅ Draw conducted successfully:', result);
-      return result;
-  
-    } catch (error) {
-      console.error('❌ Error in conductDraw:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-        code: error.code
-      });
-      
-      // Re-throw the error to be handled by the controller
-      throw error;
-    }
   }
 
 //   /**

@@ -68,17 +68,19 @@ export class AuthService {
             .where(eq(schema.stationUsers.userId, user.id));
         const stationIds = stationLinks.map((link) => link.stationId);
         const token = await this.signToken(userWithoutPassword.id, userWithoutPassword.email);
+        const refreshSecret = this.config.get('JWT_REFRESH_SECRET') || this.config.get('JWT_SECRET') + '_refresh';
         return {
             ...userWithoutPassword,
             ...token,
-            expiresIn: 864000, // 10 days in seconds
+            expiresIn: 3600, // 1 hour in seconds
             tokenType: 'Bearer',
             refreshToken: await this.jwt.signAsync({
                 sub: userWithoutPassword.id,
-                email: userWithoutPassword.email
+                email: userWithoutPassword.email,
+                type: 'refresh',
             }, {
-                expiresIn: '14d',
-                secret: this.config.get('JWT_SECRET')
+                expiresIn: '7d',
+                secret: refreshSecret,
             }),
             idAgent: userWithoutPassword.id,
             idTerminal: 0,
@@ -192,7 +194,7 @@ export class AuthService {
         const secret = this.config.get('JWT_SECRET')
 
         const token = await this.jwt.signAsync(payload, {
-            expiresIn: '10d',
+            expiresIn: '1h',
             secret: secret
         })
         return { access_token: token };

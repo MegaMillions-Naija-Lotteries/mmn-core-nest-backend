@@ -1,7 +1,7 @@
 import { Test } from "@nestjs/testing"
 import * as pactum from 'pactum';
 import { AppModule } from "../src/app.module"
-import { INestApplication, ValidationPipe } from "@nestjs/common"
+import { INestApplication, ValidationPipe, VersioningType } from "@nestjs/common"
 import { AuthDto } from "../src/auth/dto";
 import { EditUserDto } from "../src/user/dto";
 
@@ -14,9 +14,14 @@ describe('App e2e', () => {
     app = moduleRef.createNestApplication();
     app.useGlobalPipes(
       new ValidationPipe({
-        whitelist: true
+        whitelist: true,
+        transform: true,
+        transformOptions: { enableImplicitConversion: true },
       })
     );
+    app.enableVersioning({
+      type: VersioningType.URI,
+    });
     await app.init();
     await app.listen(3333);
     pactum.request.setBaseUrl('http://localhost:3333')
@@ -31,7 +36,7 @@ describe('App e2e', () => {
     }
     describe('Signup', ()=>{
       it('should throw if email empty', () => {
-        return pactum.spec().post('/auth/signup')
+        return pactum.spec().post('/v1/auth/signup')
           .withBody({
             password:dto.password
           })
@@ -39,7 +44,7 @@ describe('App e2e', () => {
           // .inspect();
       });
       it('should throw if password empty', () => {
-        return pactum.spec().post('/auth/signup')
+        return pactum.spec().post('/v1/auth/signup')
           .withBody({
             email:dto.email
           })
@@ -47,12 +52,12 @@ describe('App e2e', () => {
           // .inspect();
       })
       it('should throw if no body is provided ', () => {
-        return pactum.spec().post('/auth/signup')
+        return pactum.spec().post('/v1/auth/signup')
           .expectStatus(400)
           // .inspect();
       })
       it('should signup', ()=>{
-        return pactum.spec().post('/auth/signup')
+        return pactum.spec().post('/v1/auth/signup')
         .withBody(dto)
         .expectStatus(201)
         // .inspect();
@@ -60,7 +65,7 @@ describe('App e2e', () => {
     });
     describe('Signin', ()=>{
       it('should throw if email empty', () => {
-        return pactum.spec().post('/auth/login')
+        return pactum.spec().post('/v1/auth/login')
           .withBody({
             password:dto.password
           })
@@ -68,7 +73,7 @@ describe('App e2e', () => {
           // .inspect();
       });
       it('should throw if password empty', () => {
-        return pactum.spec().post('/auth/login')
+        return pactum.spec().post('/v1/auth/login')
           .withBody({
             email:dto.email
           })
@@ -76,12 +81,12 @@ describe('App e2e', () => {
           // .inspect();
       })
       it('should throw if no body is provided ', () => {
-        return pactum.spec().post('/auth/login')
+        return pactum.spec().post('/v1/auth/login')
           .expectStatus(400)
           // .inspect();
       })
       it('should signin', () => {
-        return pactum.spec().post('/auth/login')
+        return pactum.spec().post('/v1/auth/login')
           .withBody(dto)
           .expectStatus(200)
           .stores('userAt', 'access_token')
@@ -94,7 +99,7 @@ describe('App e2e', () => {
     describe('Get me', ()=>{
       it('should get current user', () => {
         return pactum.spec()
-          .get('/users/me')
+          .get('/v1/users/me')
           .withBearerToken('$S{userAt}')
           .expectStatus(200);
           // .inspect();
@@ -107,7 +112,7 @@ describe('App e2e', () => {
           email:'dage@eee.cd'
         }
         return pactum.spec()
-          .patch('/users')
+          .patch('/v1/users')
           .withBearerToken('$S{userAt}')
           .withBody(dto)
           .expectStatus(200)

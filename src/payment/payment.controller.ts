@@ -41,20 +41,17 @@ export class PaymentController {
   @UseGuards(WebhookGuard)
   @Version('1')
   async handleWebhook(@Body() payload: any) {
-    // Handle webhook events
-    const { event, data } = payload;
-    
+    const { event } = payload;
+
     switch (event) {
       case 'charge.success':
-        // Handle successful payment
-        console.log('Payment successful:', data);
+        // TODO: Handle successful payment
         break;
       case 'charge.failed':
-        // Handle failed payment
-        console.log('Payment failed:', data);
+        // TODO: Handle failed payment
         break;
       default:
-        console.log('Unhandled event:', event);
+        break;
     }
 
     return { status: 'success' };
