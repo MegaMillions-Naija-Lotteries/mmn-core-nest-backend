@@ -12,7 +12,7 @@ export class TransactionController {
 
     @Get('/radio')
     @Version('1')
-    @Roles(USER_ROLE.ROLE_ADMIN)
+    @Roles(USER_ROLE.ROLE_ADMIN, USER_ROLE.ROLE_STATION)
     getAllRadioTransactions(
         @Query('stationId') stationId?: number,
         @Query('drawId') drawId?: number,

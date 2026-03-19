@@ -14,8 +14,8 @@ export class ConductRadioDrawDto {
     drawSettings: any;
 
     @IsString()
-    @IsOptional()
-    title?: string;
+    @IsNotEmpty()
+    title: string;
 
     @IsString()
     @IsOptional()

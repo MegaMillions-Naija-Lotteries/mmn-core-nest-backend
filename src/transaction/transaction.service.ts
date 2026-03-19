@@ -307,7 +307,7 @@ export class TransactionService {
         endDate?: string;
     }): Promise<any> {
         const whereClauses: any[] = [];
-        whereClauses.push(eq(schema.transactions.type, 'Radio ticket purchase'));
+        whereClauses.push(eq(schema.transactions.type, 'raffle'));
 
         if (filter?.drawId) {
             whereClauses.push(
