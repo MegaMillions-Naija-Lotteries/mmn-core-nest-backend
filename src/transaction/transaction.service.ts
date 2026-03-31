@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { and, eq, gte, like, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, like, lt, sql } from 'drizzle-orm';
 import { MySql2Database } from 'drizzle-orm/mysql2';
 import { schema } from 'src/database/schema';
 
@@ -152,6 +152,7 @@ export class TransactionService {
             .select()
             .from(schema.transactions)
             .where(and(...whereClauses))
+            .orderBy(desc(schema.transactions.createdAt))
             .limit(limit)
             .offset(offset);
 
@@ -357,6 +358,7 @@ export class TransactionService {
             .select()
             .from(schema.transactions)
             .where(and(...whereClauses))
+            .orderBy(desc(schema.transactions.createdAt))
             .limit(limit)
             .offset(offset);
 

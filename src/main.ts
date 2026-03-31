@@ -29,6 +29,8 @@ async function bootstrap() {
     'https://dev.megamillionsnaija.com',
     'https://admin.megamillionsnaija.com',
     'https://mmn-admin-radio-dashboard.azurewebsites.net',
+    'https://megamillionsnaija.com',
+    'https://www.dev.megamillionsnaija.com',
   ]);
 
   app.enableCors({
